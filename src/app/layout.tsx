@@ -17,6 +17,13 @@ const barlowCondensed = Barlow_Condensed({
 export const metadata: Metadata = {
   title: 'Los Andalucistas',
   description: 'Gestión del equipo de pádel LAPI',
+  icons: {
+    icon: [
+      { url: '/branding/estrella-nazari.svg', type: 'image/svg+xml' },
+      { url: '/branding/estrella-nazari.svg', sizes: '16x16', type: 'image/svg+xml' },
+      { url: '/branding/estrella-nazari.svg', sizes: '32x32', type: 'image/svg+xml' },
+    ],
+  },
 }
 
 export default function RootLayout({

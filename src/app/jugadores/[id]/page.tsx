@@ -100,6 +100,7 @@ export default async function JugadorPage({ params }: Props) {
   const updateAction = updatePlayer.bind(null, player.id) as UpdateAction
   const teamWithdrawal = withdrawals.find((w) => w.scope === 'equipo')
   const matchWithdrawals = withdrawals.filter((w) => w.scope === 'partido')
+  const today = new Date().toISOString().slice(0, 10)
 
   return (
     <div className="p-4 sm:p-8 max-w-2xl mx-auto">
@@ -150,9 +151,14 @@ export default async function JugadorPage({ params }: Props) {
                   <span className="text-sm font-medium text-texto tabular-nums font-mono">
                     {Number(fee.amount).toFixed(2)} €
                   </span>
-                  <span className={fee.status === 'pagado' ? 'badge-green' : 'badge-amber'}>
-                    {fee.status === 'pagado' ? 'Pagado' : 'Pendiente'}
-                  </span>
+                  {(() => {
+                    const vencida = fee.status === 'pendiente' && !!fee.due_date && fee.due_date < today
+                    return (
+                      <span className={fee.status === 'pagado' ? 'badge-green' : vencida ? 'badge-red' : 'badge-amber'}>
+                        {fee.status === 'pagado' ? 'Pagado' : vencida ? 'Vencida' : 'Pendiente'}
+                      </span>
+                    )
+                  })()}
                 </div>
               </div>
             ))}

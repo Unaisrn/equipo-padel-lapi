@@ -21,6 +21,28 @@ export function TransactionList({ transactions }: Props) {
   const [isPending, startTransition] = useTransition()
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  function handleExportCSV() {
+    const today = new Date().toISOString().slice(0, 10)
+    const headers = ['Fecha', 'Tipo', 'Concepto', 'Importe', 'Jugador']
+    const rows = transactions.map((tx) => [
+      new Date(tx.date + 'T00:00:00').toLocaleDateString('es-ES'),
+      tx.type === 'ingreso' ? 'Ingreso' : 'Gasto',
+      tx.concept,
+      (tx.type === 'gasto' ? '-' : '') + tx.amount.toFixed(2),
+      tx.players?.full_name ?? '',
+    ])
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `caja-andalucistas-${today}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   function handleDelete(tx: TransactionWithPlayer) {
     if (!confirm(`¿Eliminar "${tx.concept}"?\nEsta acción no se puede deshacer.`)) return
     setDeletingId(tx.id)
@@ -38,9 +60,16 @@ export function TransactionList({ transactions }: Props) {
         <p className="text-sm text-apagado">
           {transactions.length} movimiento{transactions.length !== 1 ? 's' : ''}
         </p>
-        <button onClick={() => setShowNew(true)} className="btn-primary">
-          + Nuevo movimiento
-        </button>
+        <div className="flex items-center gap-2">
+          {transactions.length > 0 && (
+            <button onClick={handleExportCSV} className="btn-secondary">
+              Exportar CSV
+            </button>
+          )}
+          <button onClick={() => setShowNew(true)} className="btn-primary">
+            + Nuevo movimiento
+          </button>
+        </div>
       </div>
 
       {transactions.length === 0 ? (

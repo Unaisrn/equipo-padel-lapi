@@ -22,6 +22,7 @@ export function FeeList({ fees }: Props) {
   const [selectedFee, setSelectedFee] = useState<FeeWithPlayer | null>(null)
   const [isPending, startTransition] = useTransition()
   const [undoingId, setUndoingId] = useState<string | null>(null)
+  const today = new Date().toISOString().slice(0, 10)
 
   function handleUndo(fee: FeeWithPlayer) {
     const name = fee.players?.full_name ?? 'este jugador'
@@ -77,9 +78,14 @@ export function FeeList({ fees }: Props) {
                   {fee.amount.toFixed(2)} €
                 </td>
                 <td className="px-4 py-3">
-                  <span className={fee.status === 'pagado' ? 'badge-green' : 'badge-amber'}>
-                    {fee.status === 'pagado' ? 'Pagado' : 'Pendiente'}
-                  </span>
+                  {(() => {
+                    const vencida = fee.status === 'pendiente' && !!fee.due_date && fee.due_date < today
+                    return (
+                      <span className={fee.status === 'pagado' ? 'badge-green' : vencida ? 'badge-red' : 'badge-amber'}>
+                        {fee.status === 'pagado' ? 'Pagado' : vencida ? 'Vencida' : 'Pendiente'}
+                      </span>
+                    )
+                  })()}
                   {fee.status === 'pagado' && fee.payment_method && (
                     <span className="ml-2 text-xs text-tenue">
                       {METHOD_LABEL[fee.payment_method]}
