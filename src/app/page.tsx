@@ -136,7 +136,7 @@ export default async function DashboardPage() {
               <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${
                 nextMatch.match_type === 'entreno'
                   ? 'border-purple-500/40 text-purple-400'
-                  : 'border-azul/40 text-azul'
+                  : 'border-blue-700/40 text-blue-300'
               }`}>
                 {nextMatch.match_type === 'entreno' ? 'Entreno' : 'Liga'}
               </span>

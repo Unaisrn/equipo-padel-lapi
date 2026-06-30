@@ -7,6 +7,8 @@ import { updateMatch } from '@/app/partidos/actions'
 import type { MatchFormState } from '@/app/partidos/actions'
 import type { Database } from '@/types/database'
 
+export const dynamic = 'force-dynamic'
+
 type Match = Database['public']['Tables']['matches']['Row']
 type MatchSet = Database['public']['Tables']['match_sets']['Row']
 type UpdateAction = (prevState: MatchFormState, formData: FormData) => Promise<MatchFormState>
@@ -107,7 +109,7 @@ export default async function PartidoPage({ params }: Props) {
       <div className="card p-6 mb-5">
         <h2 className="text-sm font-semibold text-texto mb-5">Datos del partido</h2>
         <MatchForm
-          key={`${typedMatch.id}-${typedMatch.status}-${typedMatch.date}`}
+          key={`${typedMatch.id}-${typedMatch.status}-${typedMatch.date}-${typedMatch.match_type}`}
           action={updateAction}
           match={typedMatch}
         />

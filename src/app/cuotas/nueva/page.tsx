@@ -5,7 +5,12 @@ import { createFee } from '@/app/cuotas/actions'
 
 export const dynamic = 'force-dynamic'
 
-export default async function NuevaCuotaPage() {
+interface Props {
+  searchParams: Promise<{ player_id?: string }>
+}
+
+export default async function NuevaCuotaPage({ searchParams }: Props) {
+  const { player_id } = await searchParams
   const supabase = await createClient()
   const { data: players, error } = await supabase
     .from('players')
@@ -32,7 +37,7 @@ export default async function NuevaCuotaPage() {
           primero.
         </div>
       ) : (
-        <FeeForm players={players} action={createFee} />
+        <FeeForm players={players} action={createFee} defaultPlayerId={player_id} />
       )}
     </div>
   )

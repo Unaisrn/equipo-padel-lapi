@@ -41,7 +41,7 @@ function emptyPair(): PairState {
 
 function initPairs(matchType: MatchType, existingSets: ExistingSet[]): PairState[] {
   if (existingSets.length > 0) {
-    return existingSets
+    return [...existingSets]
       .sort((a, b) => a.pair_number - b.pair_number)
       .map((s) => ({
         player1: s.player_ids[0] ?? '',

@@ -179,6 +179,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-borde/80 text-apagado border border-borde;
 }
 
+.badge-purple {
+  @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-950/50 text-purple-300 border border-purple-700/30;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    TABLES
 ═══════════════════════════════════════════════════════════════════ */

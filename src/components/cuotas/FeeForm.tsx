@@ -13,6 +13,7 @@ type ActionFn = (prevState: FeeFormState, formData: FormData) => Promise<FeeForm
 interface Props {
   players: Player[]
   action: ActionFn
+  defaultPlayerId?: string
 }
 
 function SubmitButton() {
@@ -24,7 +25,7 @@ function SubmitButton() {
   )
 }
 
-export function FeeForm({ players, action }: Props) {
+export function FeeForm({ players, action, defaultPlayerId }: Props) {
   const [state, formAction] = useActionState(action, null)
 
   return (
@@ -37,7 +38,7 @@ export function FeeForm({ players, action }: Props) {
         <label htmlFor="player_id" className="field-label">
           Jugador <span className="text-rojo">*</span>
         </label>
-        <select id="player_id" name="player_id" required defaultValue="" className="field-select">
+        <select id="player_id" name="player_id" required defaultValue={defaultPlayerId ?? ''} className="field-select">
           <option value="" disabled>Seleccionar jugador...</option>
           {players.map((p) => (
             <option key={p.id} value={p.id}>{p.full_name}</option>

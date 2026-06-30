@@ -9,6 +9,8 @@ import type { FeeStatus } from '@/types/database'
 import { calcularStatsJugador, calcularStatsParejas } from '@/lib/stats'
 import type { SetRow } from '@/lib/stats'
 
+export const dynamic = 'force-dynamic'
+
 type UpdateAction = (prevState: PlayerFormState, formData: FormData) => Promise<PlayerFormState>
 
 type WithdrawalRow = {
@@ -247,7 +249,7 @@ export default async function JugadorPage({ params }: Props) {
             return (
               <div key={tipo}>
                 <div className={`text-[10px] font-semibold uppercase tracking-widest mb-2 ${
-                  tipo === 'liga' ? 'text-azul' : 'text-purple-400'
+                  tipo === 'liga' ? 'text-blue-300' : 'text-purple-400'
                 }`}>
                   {tipo === 'liga' ? 'Liga' : 'Entreno'}
                 </div>
