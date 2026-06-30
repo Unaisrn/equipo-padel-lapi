@@ -4,6 +4,8 @@ import { FeeList } from '@/components/cuotas/FeeList'
 import type { FeeWithPlayer } from '@/components/cuotas/MarkPaidModal'
 import type { FeeStatus } from '@/types/database'
 
+export const dynamic = 'force-dynamic'
+
 const FILTROS = [
   { label: 'Pendientes', value: 'pendiente' },
   { label: 'Pagadas',    value: 'pagado' },

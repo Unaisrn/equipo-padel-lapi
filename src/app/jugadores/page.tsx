@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import type { PlayerStatus } from '@/types/database'
 import { EmptyState } from '@/components/ui/EmptyState'
 
+export const dynamic = 'force-dynamic'
+
 const POSITION_LABELS: Record<string, string> = {
   drive: 'Drive',
   reves: 'Revés',

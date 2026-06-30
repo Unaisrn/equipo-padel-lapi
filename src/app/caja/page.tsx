@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
 import { calcularDesgloseCaja } from '@/lib/stats'
 import { FilterBar } from '@/components/caja/FilterBar'
 import { TransactionList } from '@/components/caja/TransactionList'
