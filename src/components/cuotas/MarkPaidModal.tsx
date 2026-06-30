@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { markAsPaid } from '@/app/cuotas/actions'
 import type { FeeFormState } from '@/app/cuotas/actions'
 import type { Database } from '@/types/database'
@@ -35,6 +36,7 @@ export function MarkPaidModal({ fee, onClose }: Props) {
 
   useEffect(() => {
     if (state && 'success' in state) {
+      toast.success('Cuota marcada como pagada')
       router.refresh()
       onClose()
     }

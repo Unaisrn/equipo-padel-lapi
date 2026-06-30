@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { darDeBaja, deletePlayer } from '@/app/jugadores/actions'
 
 export function BajaButton({ playerId }: { playerId: string }) {
@@ -12,6 +13,7 @@ export function BajaButton({ playerId }: { playerId: string }) {
     if (!confirm('¿Dar de baja a este jugador del equipo?\nSu estado cambiará a "baja".')) return
     startTransition(async () => {
       await darDeBaja(playerId)
+      toast.success('Jugador dado de baja')
       router.refresh()
     })
   }
@@ -31,10 +33,15 @@ export function BajaButton({ playerId }: { playerId: string }) {
 
 export function DeletePlayerButton({ playerId }: { playerId: string }) {
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   function handleDelete() {
     if (!confirm('¿Eliminar este jugador?\nEsta acción no se puede deshacer.')) return
-    startTransition(() => deletePlayer(playerId))
+    startTransition(async () => {
+      await deletePlayer(playerId)
+      toast.success('Jugador eliminado')
+      router.push('/jugadores')
+    })
   }
 
   return (

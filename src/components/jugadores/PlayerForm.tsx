@@ -1,8 +1,10 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import type { Database } from '@/types/database'
 import type { PlayerFormState } from '@/app/jugadores/actions'
 
@@ -25,16 +27,25 @@ function SubmitButton() {
 }
 
 export function PlayerForm({ action, player, cancelHref = '/jugadores' }: Props) {
+  const router = useRouter()
   const [state, formAction] = useActionState(action, null)
   const today = new Date().toISOString().split('T')[0]
+
+  useEffect(() => {
+    if (state && 'success' in state) {
+      if (player) {
+        toast.success('Jugador actualizado')
+      } else {
+        toast.success('Jugador añadido')
+        router.push('/jugadores')
+      }
+    }
+  }, [state, player, router])
 
   return (
     <form action={formAction} className="space-y-5">
       {state && 'error' in state && (
         <div className="alert-error">{state.error}</div>
-      )}
-      {state && 'success' in state && (
-        <div className="alert-success">Guardado correctamente</div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

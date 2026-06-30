@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { WithdrawalScope } from '@/types/database'
 
@@ -37,5 +36,5 @@ export async function createWithdrawal(
   revalidatePath('/retiradas')
   revalidatePath('/jugadores')
   revalidatePath(`/jugadores/${player_id}`)
-  redirect('/retiradas')
+  return { success: true }
 }

@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { createTransaction, updateTransaction } from '@/app/caja/actions'
 import type { TransactionFormState } from '@/app/caja/actions'
 import type { TransactionWithPlayer } from './TransactionList'
@@ -38,10 +39,11 @@ export function TransactionModal({ transaction, onClose }: Props) {
 
   useEffect(() => {
     if (state && 'success' in state) {
+      toast.success(isEdit ? 'Movimiento actualizado' : 'Movimiento añadido')
       router.refresh()
       onClose()
     }
-  }, [state, onClose, router])
+  }, [state, isEdit, onClose, router])
 
   return (
     <div

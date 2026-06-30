@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import type { WithdrawalFormState } from '@/app/retiradas/actions'
 
 type Player = { id: string; full_name: string }
@@ -27,9 +29,17 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
 }
 
 export function WithdrawalForm({ players, matches, action }: Props) {
+  const router = useRouter()
   const [state, formAction] = useActionState(action, null)
   const [scope, setScope] = useState<Scope>('equipo')
   const today = new Date().toISOString().split('T')[0]
+
+  useEffect(() => {
+    if (state && 'success' in state) {
+      toast.success('Retirada registrada')
+      router.push('/retiradas')
+    }
+  }, [state, router])
 
   const submitDisabled = scope === 'partido' && matches.length === 0
 

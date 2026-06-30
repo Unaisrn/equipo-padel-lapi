@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { saveResult } from '@/app/partidos/actions'
 import type { PairInput, ResultFormState } from '@/app/partidos/actions'
 
@@ -74,6 +75,7 @@ export function ResultForm({ matchId, players, existingSets }: Props) {
       const res = await saveResult(matchId, pairInputs)
       setResult(res)
       if (res && 'success' in res) {
+        toast.success('Resultado guardado')
         router.refresh()
       }
     })
@@ -89,10 +91,6 @@ export function ResultForm({ matchId, players, existingSets }: Props) {
       {result && 'error' in result && (
         <div className="alert-error">{result.error}</div>
       )}
-      {result && 'success' in result && (
-        <div className="alert-success">Resultado guardado correctamente.</div>
-      )}
-
       <div className="space-y-4">
         {pairs.map((pair, i) => {
           const pairNum = i + 1

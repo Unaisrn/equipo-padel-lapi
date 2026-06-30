@@ -46,6 +46,33 @@ function MatchRow({ match }: { match: Match }) {
   )
 }
 
+function MatchCard({ match }: { match: Match }) {
+  const date = new Date(match.date + 'T00:00:00').toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+  return (
+    <Link href={`/partidos/${match.id}`} className="block card p-4 hover:border-verde/40 transition-colors">
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <span className="font-medium text-texto truncate pr-2">{match.opponent}</span>
+        <span className={`${STATUS_BADGE[match.status]} shrink-0`}>
+          {STATUS_LABEL[match.status]}
+        </span>
+      </div>
+      <p className="text-sm text-apagado mb-1">
+        {date} · <span className="capitalize">{match.home_away}</span>
+      </p>
+      {match.location && (
+        <p className="text-xs text-tenue truncate">{match.location}</p>
+      )}
+      {match.result_summary && (
+        <p className="text-xs font-mono text-apagado mt-1">{match.result_summary}</p>
+      )}
+    </Link>
+  )
+}
+
 export default async function PartidosPage() {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -79,6 +106,26 @@ export default async function PartidosPage() {
     </thead>
   )
 
+  function MatchList({ list }: { list: Match[] }) {
+    return (
+      <>
+        {/* Desktop: tabla */}
+        <div className="table-wrap hidden md:block">
+          <table className="w-full text-sm">
+            {tableHead}
+            <tbody className="table-divider">
+              {list.map((m) => <MatchRow key={m.id} match={m} />)}
+            </tbody>
+          </table>
+        </div>
+        {/* Mobile: cards */}
+        <div className="md:hidden space-y-3">
+          {list.map((m) => <MatchCard key={m.id} match={m} />)}
+        </div>
+      </>
+    )
+  }
+
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -101,28 +148,14 @@ export default async function PartidosPage() {
             {upcoming.length === 0 ? (
               <p className="text-sm text-apagado pl-1">No hay partidos próximos.</p>
             ) : (
-              <div className="table-wrap">
-                <table className="w-full text-sm">
-                  {tableHead}
-                  <tbody className="table-divider">
-                    {upcoming.map((m) => <MatchRow key={m.id} match={m} />)}
-                  </tbody>
-                </table>
-              </div>
+              <MatchList list={upcoming} />
             )}
           </section>
 
           {past.length > 0 && (
             <section>
               <h2 className="section-label">Historial</h2>
-              <div className="table-wrap">
-                <table className="w-full text-sm">
-                  {tableHead}
-                  <tbody className="table-divider">
-                    {past.map((m) => <MatchRow key={m.id} match={m} />)}
-                  </tbody>
-                </table>
-              </div>
+              <MatchList list={past} />
             </section>
           )}
         </div>

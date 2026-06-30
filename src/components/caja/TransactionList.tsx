@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { deleteTransaction } from '@/app/caja/actions'
 import { TransactionModal } from './TransactionModal'
 import type { Database } from '@/types/database'
@@ -48,10 +49,42 @@ export function TransactionList({ transactions }: Props) {
     setDeletingId(tx.id)
     startTransition(async () => {
       const result = await deleteTransaction(tx.id)
-      if (result.error) alert(`Error: ${result.error}`)
-      else router.refresh()
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success('Movimiento eliminado')
+        router.refresh()
+      }
       setDeletingId(null)
     })
+  }
+
+  function formatAmount(tx: TransactionWithPlayer) {
+    return (
+      <span className={`font-mono font-semibold whitespace-nowrap tabular-nums ${
+        tx.type === 'ingreso' ? 'text-verde-bright' : 'text-rojo'
+      }`}>
+        {tx.type === 'ingreso' ? '+' : '−'}
+        {tx.amount.toFixed(2)} €
+      </span>
+    )
+  }
+
+  function actionCell(tx: TransactionWithPlayer) {
+    return tx.related_fee_id ? (
+      <span className="badge-gray">vinculado a cuota</span>
+    ) : (
+      <div className="flex items-center gap-2">
+        <button onClick={() => setEditingTx(tx)} className="btn-sm-ghost">Editar</button>
+        <button
+          onClick={() => handleDelete(tx)}
+          disabled={deletingId === tx.id || isPending}
+          className="btn-sm-danger"
+        >
+          {deletingId === tx.id ? '...' : 'Eliminar'}
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -77,56 +110,52 @@ export function TransactionList({ transactions }: Props) {
           No hay movimientos con el filtro seleccionado.
         </div>
       ) : (
-        <div className="table-wrap">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="table-head-row">
-                <th className="table-th">Fecha</th>
-                <th className="table-th">Concepto</th>
-                <th className="table-th">Jugador</th>
-                <th className="table-th text-right">Importe</th>
-                <th className="table-th">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="table-divider">
-              {transactions.map((tx) => (
-                <tr key={tx.id} className="table-row">
-                  <td className="px-4 py-3 text-apagado whitespace-nowrap">
-                    {new Date(tx.date + 'T00:00:00').toLocaleDateString('es-ES')}
-                  </td>
-                  <td className="px-4 py-3 text-texto">{tx.concept}</td>
-                  <td className="px-4 py-3 text-apagado">{tx.players?.full_name ?? '—'}</td>
-                  <td
-                    className={`px-4 py-3 text-right font-mono font-semibold whitespace-nowrap tabular-nums ${
-                      tx.type === 'ingreso' ? 'text-verde-bright' : 'text-rojo'
-                    }`}
-                  >
-                    {tx.type === 'ingreso' ? '+' : '−'}
-                    {tx.amount.toFixed(2)} €
-                  </td>
-                  <td className="px-4 py-3">
-                    {tx.related_fee_id ? (
-                      <span className="badge-gray">vinculado a cuota</span>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => setEditingTx(tx)} className="btn-sm-ghost">
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(tx)}
-                          disabled={deletingId === tx.id || isPending}
-                          className="btn-sm-danger"
-                        >
-                          {deletingId === tx.id ? '...' : 'Eliminar'}
-                        </button>
-                      </div>
-                    )}
-                  </td>
+        <>
+          {/* ── Desktop: tabla ─────────────────────────────────────── */}
+          <div className="table-wrap hidden md:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="table-head-row">
+                  <th className="table-th">Fecha</th>
+                  <th className="table-th">Concepto</th>
+                  <th className="table-th">Jugador</th>
+                  <th className="table-th text-right">Importe</th>
+                  <th className="table-th">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="table-divider">
+                {transactions.map((tx) => (
+                  <tr key={tx.id} className="table-row">
+                    <td className="px-4 py-3 text-apagado whitespace-nowrap">
+                      {new Date(tx.date + 'T00:00:00').toLocaleDateString('es-ES')}
+                    </td>
+                    <td className="px-4 py-3 text-texto">{tx.concept}</td>
+                    <td className="px-4 py-3 text-apagado">{tx.players?.full_name ?? '—'}</td>
+                    <td className="px-4 py-3 text-right">{formatAmount(tx)}</td>
+                    <td className="px-4 py-3">{actionCell(tx)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Mobile: cards ──────────────────────────────────────── */}
+          <div className="md:hidden space-y-3">
+            {transactions.map((tx) => (
+              <div key={tx.id} className="card p-4">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <span className="font-medium text-texto text-sm truncate pr-2">{tx.concept}</span>
+                  {formatAmount(tx)}
+                </div>
+                <div className="flex items-center justify-between text-xs text-apagado mb-3">
+                  <span>{new Date(tx.date + 'T00:00:00').toLocaleDateString('es-ES')}</span>
+                  {tx.players?.full_name && <span>{tx.players.full_name}</span>}
+                </div>
+                <div>{actionCell(tx)}</div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {showNew && <TransactionModal onClose={() => setShowNew(false)} />}

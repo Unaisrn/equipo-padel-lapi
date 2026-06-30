@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Barlow_Condensed } from 'next/font/google'
+import { Toaster } from 'sonner'
 import { AppShell } from '@/components/layout/AppShell'
 import './globals.css'
 
@@ -36,6 +37,7 @@ export default function RootLayout({
     >
       <body className="h-full bg-fondo text-texto antialiased">
         <AppShell>{children}</AppShell>
+        <Toaster richColors theme="dark" position="bottom-right" />
       </body>
     </html>
   )

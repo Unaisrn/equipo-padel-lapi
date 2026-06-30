@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { PlayerPosition } from '@/types/database'
 
@@ -32,7 +31,7 @@ export async function createPlayer(
   if (error) return { error: error.message }
 
   revalidatePath('/jugadores')
-  redirect('/jugadores')
+  return { success: true }
 }
 
 export async function updatePlayer(
@@ -59,9 +58,9 @@ export async function darDeBaja(id: string): Promise<void> {
   revalidatePath(`/jugadores/${id}`)
 }
 
-export async function deletePlayer(id: string): Promise<void> {
+export async function deletePlayer(id: string): Promise<{ success: true }> {
   const supabase = await createClient()
   await supabase.from('players').delete().eq('id', id)
   revalidatePath('/jugadores')
-  redirect('/jugadores')
+  return { success: true }
 }

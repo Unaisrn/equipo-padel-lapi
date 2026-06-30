@@ -4,6 +4,7 @@ import { useActionState, useEffect } from 'react'
 import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import type { MatchFormState } from '@/app/partidos/actions'
 import type { Database } from '@/types/database'
 
@@ -31,6 +32,7 @@ export function MatchForm({ action, match, cancelHref }: Props) {
 
   useEffect(() => {
     if (state && 'success' in state) {
+      toast.success('Partido guardado')
       router.refresh()
     }
   }, [state, router])
@@ -40,10 +42,6 @@ export function MatchForm({ action, match, cancelHref }: Props) {
       {state && 'error' in state && (
         <div className="alert-error">{state.error}</div>
       )}
-      {state && 'success' in state && (
-        <div className="alert-success">Guardado correctamente.</div>
-      )}
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="date" className="field-label">
