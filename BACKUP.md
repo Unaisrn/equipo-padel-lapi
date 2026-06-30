@@ -1,8 +1,36 @@
 # Backups de la base de datos
 
-## Frecuencia recomendada
+## Backup automático semanal (GitHub Actions)
 
-Hacer un backup manual **antes de cualquier cambio de esquema** (migraciones) y como mínimo **una vez al mes** de forma rutinaria.
+Cada **domingo a las 04:00 UTC** se ejecuta automáticamente el workflow
+`.github/workflows/backup.yml`, que hace un `pg_dump` completo de la base de datos y
+lo sube como **artifact del run** con retención de **90 días**.
+
+### Cómo descargar un backup
+
+1. Ve a tu repo en GitHub → pestaña **Actions**
+2. En el menú de la izquierda selecciona **"Weekly database backup"**
+3. Haz clic en el run que quieras (el más reciente o uno concreto por fecha)
+4. En la sección **Artifacts** al final de la página, descarga el archivo
+   `backup-andalucistas-YYYY-MM-DD.sql`
+
+### Lanzar el backup manualmente
+
+En la misma pantalla del workflow hay un botón **"Run workflow"** (rama `master`).
+Úsalo para probar que funciona o para generar un backup fuera del calendario semanal
+(p. ej. antes de una migración importante).
+
+### Si el backup falla
+
+GitHub te avisará por email si el job falla. El job está configurado para fallar de
+forma visible (no en silencio) si `pg_dump` devuelve un error.
+
+---
+
+## Frecuencia recomendada (manual)
+
+El backup automático cubre la rutina semanal. Lanza uno **manual adicional** antes de
+cualquier cambio de esquema (migraciones) para tener un punto de restauración exacto.
 
 ---
 

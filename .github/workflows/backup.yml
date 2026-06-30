@@ -1,0 +1,42 @@
+name: Weekly database backup
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'   # every Sunday at 04:00 UTC
+  workflow_dispatch:        # allow manual "Run workflow" from the Actions tab
+
+jobs:
+  backup:
+    name: pg_dump → artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+
+      - name: Set backup filename
+        id: filename
+        run: echo "name=backup-andalucistas-$(date -u +%Y-%m-%d).sql" >> "$GITHUB_OUTPUT"
+
+      - name: Run pg_dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          pg_dump "$SUPABASE_DB_URL" \
+            --clean \
+            --if-exists \
+            --no-owner \
+            --no-acl \
+            -f "${{ steps.filename.outputs.name }}"
+          echo "Backup written: $(du -sh ${{ steps.filename.outputs.name }})"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.filename.outputs.name }}
+          path: ${{ steps.filename.outputs.name }}
+          retention-days: 90
+          if-no-files-found: error
