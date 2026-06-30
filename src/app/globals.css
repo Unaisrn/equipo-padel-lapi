@@ -2,25 +2,25 @@
 
 @theme {
   /* ── Brand greens ─────────────────────────────────────────────── */
-  --color-verde:        #1a5c35;   /* campo/pitch green */
-  --color-verde-dark:   #0e2e1a;   /* sidebar / header */
-  --color-verde-mid:    #226b44;   /* hover / active */
-  --color-verde-bright: #2d9660;   /* bars, highlights */
+  --color-verde:        #1e6b3d;   /* campo/pitch green */
+  --color-verde-dark:   #172c1e;   /* sidebar / header */
+  --color-verde-mid:    #268050;   /* hover / active */
+  --color-verde-bright: #33ad6e;   /* bars, highlights */
 
   /* ── Accent red (use sparingly) ───────────────────────────────── */
   --color-rojo:         #c0392b;
   --color-rojo-dark:    #9b2d22;
 
   /* ── App surfaces ─────────────────────────────────────────────── */
-  --color-fondo:          #0a1a0f;  /* root background */
-  --color-tarjeta:        #111f16;  /* card bg */
-  --color-tarjeta-hover:  #172b1d;  /* card hover */
-  --color-borde:          #1c3326;  /* borders */
+  --color-fondo:          #17211a;  /* root background */
+  --color-tarjeta:        #1e2c23;  /* card bg */
+  --color-tarjeta-hover:  #263628;  /* card hover */
+  --color-borde:          #314a3a;  /* borders */
 
   /* ── Text ─────────────────────────────────────────────────────── */
-  --color-texto:   #cce8d6;  /* primary */
-  --color-apagado: #527a62;  /* muted / secondary */
-  --color-tenue:   #2a4234;  /* very dim / placeholder */
+  --color-texto:   #d4eddf;  /* primary */
+  --color-apagado: #6b9478;  /* muted / secondary */
+  --color-tenue:   #3d5e4c;  /* very dim / placeholder */
 
   /* ── Fonts ────────────────────────────────────────────────────── */
   --font-sans:    var(--font-geist-sans);
