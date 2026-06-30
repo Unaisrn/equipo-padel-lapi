@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import type { Database } from '@/types/database'
+import type { Database, MatchType } from '@/types/database'
 import { EmptyState } from '@/components/ui/EmptyState'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +17,29 @@ const STATUS_LABEL: Record<string, string> = {
   jugado:     'Jugado',
   aplazado:   'Aplazado',
 }
+const TYPE_BADGE: Record<MatchType, string> = {
+  liga:    'badge-blue',
+  entreno: 'badge-purple',
+}
+const TYPE_LABEL: Record<MatchType, string> = {
+  liga:    'Liga',
+  entreno: 'Entreno',
+}
+
+const FILTROS = [
+  { label: 'Todos',   value: 'todos' },
+  { label: 'Liga',    value: 'liga' },
+  { label: 'Entreno', value: 'entreno' },
+]
+
+interface Props {
+  searchParams: Promise<{ tipo?: string }>
+}
+
+function opponentCell(match: Match): string {
+  if (match.match_type === 'entreno') return 'Entreno interno'
+  return match.opponent ?? '—'
+}
 
 function MatchRow({ match }: { match: Match }) {
   const date = new Date(match.date + 'T00:00:00').toLocaleDateString('es-ES', {
@@ -26,16 +49,23 @@ function MatchRow({ match }: { match: Match }) {
   })
   return (
     <tr className="table-row cursor-pointer">
-      <td className="px-4 py-3 text-apagado whitespace-nowrap">{date}</td>
+      <td className="px-4 py-3 text-apagado whitespace-nowrap">
+        <div>{date}</div>
+        <span className={`${TYPE_BADGE[match.match_type]} text-[10px] mt-0.5`}>
+          {TYPE_LABEL[match.match_type]}
+        </span>
+      </td>
       <td className="px-4 py-3">
         <Link
           href={`/partidos/${match.id}`}
           className="font-medium text-texto hover:text-verde-bright transition-colors"
         >
-          {match.opponent}
+          {opponentCell(match)}
         </Link>
       </td>
-      <td className="px-4 py-3 text-apagado capitalize">{match.home_away}</td>
+      <td className="px-4 py-3 text-apagado capitalize">
+        {match.home_away ?? '—'}
+      </td>
       <td className="px-4 py-3 text-apagado">{match.location ?? '—'}</td>
       <td className="px-4 py-3">
         <span className={STATUS_BADGE[match.status]}>
@@ -58,13 +88,17 @@ function MatchCard({ match }: { match: Match }) {
   return (
     <Link href={`/partidos/${match.id}`} className="block card p-4 hover:border-verde/40 transition-colors">
       <div className="flex items-start justify-between gap-2 mb-1">
-        <span className="font-medium text-texto truncate pr-2">{match.opponent}</span>
-        <span className={`${STATUS_BADGE[match.status]} shrink-0`}>
-          {STATUS_LABEL[match.status]}
-        </span>
+        <span className="font-medium text-texto truncate pr-2">{opponentCell(match)}</span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className={TYPE_BADGE[match.match_type]}>{TYPE_LABEL[match.match_type]}</span>
+          <span className={STATUS_BADGE[match.status]}>{STATUS_LABEL[match.status]}</span>
+        </div>
       </div>
       <p className="text-sm text-apagado mb-1">
-        {date} · <span className="capitalize">{match.home_away}</span>
+        {date}
+        {match.home_away && (
+          <> · <span className="capitalize">{match.home_away}</span></>
+        )}
       </p>
       {match.location && (
         <p className="text-xs text-tenue truncate">{match.location}</p>
@@ -76,12 +110,16 @@ function MatchCard({ match }: { match: Match }) {
   )
 }
 
-export default async function PartidosPage() {
+export default async function PartidosPage({ searchParams }: Props) {
+  const { tipo } = await searchParams
+  const tipoFiltro = (tipo ?? 'todos') as MatchType | 'todos'
+
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('matches')
-    .select('*')
-    .order('date', { ascending: false })
+  const query = supabase.from('matches').select('*').order('date', { ascending: false })
+
+  const { data, error } = tipoFiltro === 'todos'
+    ? await query
+    : await query.eq('match_type', tipoFiltro)
 
   if (error) throw error
 
@@ -100,7 +138,7 @@ export default async function PartidosPage() {
     <thead>
       <tr className="table-head-row">
         <th className="table-th">Fecha</th>
-        <th className="table-th">Rival</th>
+        <th className="table-th">Rival / Tipo</th>
         <th className="table-th">L/V</th>
         <th className="table-th">Sede</th>
         <th className="table-th">Estado</th>
@@ -112,7 +150,6 @@ export default async function PartidosPage() {
   function MatchList({ list }: { list: Match[] }) {
     return (
       <>
-        {/* Desktop: tabla */}
         <div className="table-wrap hidden md:block">
           <table className="w-full text-sm">
             {tableHead}
@@ -121,7 +158,6 @@ export default async function PartidosPage() {
             </tbody>
           </table>
         </div>
-        {/* Mobile: cards */}
         <div className="md:hidden space-y-3">
           {list.map((m) => <MatchCard key={m.id} match={m} />)}
         </div>
@@ -140,6 +176,18 @@ export default async function PartidosPage() {
         </Link>
       </div>
 
+      <div className="pill-tabs mb-6">
+        {FILTROS.map(({ label, value }) => (
+          <Link
+            key={value}
+            href={value === 'todos' ? '/partidos' : `/partidos?tipo=${value}`}
+            className={`pill-tab ${tipoFiltro === value ? 'pill-tab-active' : ''}`}
+          >
+            {label}
+          </Link>
+        ))}
+      </div>
+
       {matches.length === 0 ? (
         <EmptyState
           icon={
@@ -147,7 +195,9 @@ export default async function PartidosPage() {
               <path d="M5 1v2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V4a1 1 0 00-1-1h-2V1h-1.5v2h-3V1H5zm-2 5h10v7H3V6z" />
             </svg>
           }
-          title="No hay partidos registrados todavía."
+          title={tipoFiltro === 'todos'
+            ? 'No hay partidos registrados todavía.'
+            : `No hay partidos de ${TYPE_LABEL[tipoFiltro as MatchType]} registrados.`}
           action={{ href: '/partidos/nuevo', label: '+ Programar partido' }}
         />
       ) : (

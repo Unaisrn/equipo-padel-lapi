@@ -5,7 +5,7 @@ import type { TransactionRow } from '@/lib/stats'
 
 export const dynamic = 'force-dynamic'
 
-type MatchRow = { date: string; opponent: string; location: string | null; home_away: string }
+type MatchRow = { date: string; match_type: string; opponent: string | null; location: string | null; home_away: string | null }
 
 function IconUser() {
   return (
@@ -79,7 +79,7 @@ export default async function DashboardPage() {
     supabase.from('player_fees').select('amount').eq('status', 'pendiente'),
     supabase
       .from('matches')
-      .select('date, opponent, location, home_away')
+      .select('date, match_type, opponent, location, home_away')
       .eq('status', 'programado')
       .gte('date', today)
       .order('date', { ascending: true })
@@ -132,8 +132,17 @@ export default async function DashboardPage() {
         <div className="section-label">Próximo partido</div>
         {nextMatch ? (
           <div>
-            <div className="text-base font-semibold text-texto">
-              vs {nextMatch.opponent}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${
+                nextMatch.match_type === 'entreno'
+                  ? 'border-purple-500/40 text-purple-400'
+                  : 'border-azul/40 text-azul'
+              }`}>
+                {nextMatch.match_type === 'entreno' ? 'Entreno' : 'Liga'}
+              </span>
+              <span className="text-base font-semibold text-texto">
+                {nextMatch.match_type === 'entreno' ? 'Entreno interno' : `vs ${nextMatch.opponent}`}
+              </span>
             </div>
             <div className="text-sm text-apagado mt-0.5">
               {new Date(nextMatch.date + 'T00:00:00').toLocaleDateString('es-ES', {
@@ -141,8 +150,12 @@ export default async function DashboardPage() {
                 day: 'numeric',
                 month: 'long',
               })}
-              <span className="mx-1.5 text-tenue">·</span>
-              <span className="capitalize">{nextMatch.home_away}</span>
+              {nextMatch.home_away && (
+                <>
+                  <span className="mx-1.5 text-tenue">·</span>
+                  <span className="capitalize">{nextMatch.home_away}</span>
+                </>
+              )}
               {nextMatch.location && (
                 <>
                   <span className="mx-1.5 text-tenue">·</span>

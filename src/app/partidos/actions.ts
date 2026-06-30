@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { HomeAway, MatchStatus } from '@/types/database'
+import type { HomeAway, MatchStatus, MatchType } from '@/types/database'
 
 export type MatchFormState = { error: string } | { success: true } | null
 export type ResultFormState = { error: string } | { success: true } | null
@@ -16,19 +16,24 @@ export type PairInput = {
 }
 
 function parseMatchFields(formData: FormData) {
+  const match_type = (formData.get('match_type') as MatchType | null) ?? 'liga'
+  const isLiga = match_type === 'liga'
   return {
+    match_type,
     date: formData.get('date') as string,
-    opponent: ((formData.get('opponent') as string) ?? '').trim(),
+    opponent: isLiga ? ((formData.get('opponent') as string) ?? '').trim() || null : null,
     location: ((formData.get('location') as string) ?? '').trim() || null,
-    home_away: formData.get('home_away') as HomeAway,
+    home_away: isLiga ? ((formData.get('home_away') as HomeAway) || null) : null,
     notes: ((formData.get('notes') as string) ?? '').trim() || null,
   }
 }
 
 function validateMatchFields(data: ReturnType<typeof parseMatchFields>): string | null {
   if (!data.date) return 'La fecha es obligatoria'
-  if (!data.opponent) return 'El nombre del rival es obligatorio'
-  if (!data.home_away) return 'Selecciona si es local o visitante'
+  if (data.match_type === 'liga') {
+    if (!data.opponent) return 'El nombre del rival es obligatorio'
+    if (!data.home_away) return 'Selecciona si es local o visitante'
+  }
   return null
 }
 

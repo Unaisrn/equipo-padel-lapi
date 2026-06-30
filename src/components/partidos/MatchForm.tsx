@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import type { MatchFormState } from '@/app/partidos/actions'
-import type { Database } from '@/types/database'
+import type { Database, MatchType } from '@/types/database'
 import { Spinner } from '@/components/ui/Spinner'
 
 type Match = Database['public']['Tables']['matches']['Row']
@@ -27,6 +27,14 @@ const STATUS_BADGE: Record<string, string> = {
   programado: 'badge-blue',
   jugado: 'badge-green',
   aplazado: 'badge-amber',
+}
+const TYPE_BADGE: Record<MatchType, string> = {
+  liga: 'badge-blue',
+  entreno: 'badge-purple',
+}
+const TYPE_LABEL: Record<MatchType, string> = {
+  liga: 'Liga',
+  entreno: 'Entreno',
 }
 
 function SubmitButton() {
@@ -50,7 +58,8 @@ function ViewField({ label, children }: { label: string; children: React.ReactNo
 export function MatchForm({ action, match, cancelHref }: Props) {
   const router = useRouter()
   const [state, formAction] = useActionState(action, null)
-  const [isEditing, setIsEditing] = useState(!match) // start in edit if creating
+  const [isEditing, setIsEditing] = useState(!match)
+  const [matchType, setMatchType] = useState<MatchType>(match?.match_type ?? 'liga')
 
   useEffect(() => {
     if (state && 'success' in state) {
@@ -68,21 +77,33 @@ export function MatchForm({ action, match, cancelHref }: Props) {
       month: 'long',
       year: 'numeric',
     })
+    const isEntreno = match.match_type === 'entreno'
 
     return (
       <div>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
           <div className="sm:col-span-2">
-            <ViewField label="Rival">
-              <span className="font-medium">{match.opponent}</span>
+            <ViewField label="Tipo">
+              <span className={TYPE_BADGE[match.match_type]}>
+                {TYPE_LABEL[match.match_type]}
+              </span>
             </ViewField>
           </div>
+          {!isEntreno && (
+            <div className="sm:col-span-2">
+              <ViewField label="Rival">
+                <span className="font-medium">{match.opponent}</span>
+              </ViewField>
+            </div>
+          )}
           <ViewField label="Fecha">
             <span className="capitalize">{dateFormatted}</span>
           </ViewField>
-          <ViewField label="Local / Visitante">
-            <span className="capitalize">{match.home_away}</span>
-          </ViewField>
+          {!isEntreno && (
+            <ViewField label="Local / Visitante">
+              <span className="capitalize">{match.home_away}</span>
+            </ViewField>
+          )}
           <ViewField label="Sede">
             {match.location ?? '—'}
           </ViewField>
@@ -104,12 +125,34 @@ export function MatchForm({ action, match, cancelHref }: Props) {
     )
   }
 
-  // ── Modo edición (o formulario de creación) ───────────────────────
+  // ── Modo edición / creación ───────────────────────────────────────
+  const isLiga = matchType === 'liga'
+
   return (
     <form action={formAction} className="space-y-5">
       {state && 'error' in state && (
         <div className="alert-error">{state.error}</div>
       )}
+
+      <input type="hidden" name="match_type" value={matchType} />
+
+      {/* Tipo de partido */}
+      <div>
+        <label className="field-label">Tipo de partido</label>
+        <div className="pill-tabs">
+          {(['liga', 'entreno'] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setMatchType(t)}
+              className={`pill-tab ${matchType === t ? 'pill-tab-active' : ''}`}
+            >
+              {TYPE_LABEL[t]}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label htmlFor="date" className="field-label">
@@ -125,39 +168,43 @@ export function MatchForm({ action, match, cancelHref }: Props) {
           />
         </div>
 
-        <div>
-          <label htmlFor="home_away" className="field-label">
-            Local / Visitante <span className="text-rojo">*</span>
-          </label>
-          <select
-            id="home_away"
-            name="home_away"
-            required
-            defaultValue={match?.home_away ?? ''}
-            className="field-select"
-          >
-            <option value="" disabled>Seleccionar...</option>
-            <option value="local">Local</option>
-            <option value="visitante">Visitante</option>
-          </select>
-        </div>
+        {isLiga && (
+          <div>
+            <label htmlFor="home_away" className="field-label">
+              Local / Visitante <span className="text-rojo">*</span>
+            </label>
+            <select
+              id="home_away"
+              name="home_away"
+              required={isLiga}
+              defaultValue={match?.home_away ?? ''}
+              className="field-select"
+            >
+              <option value="" disabled>Seleccionar...</option>
+              <option value="local">Local</option>
+              <option value="visitante">Visitante</option>
+            </select>
+          </div>
+        )}
 
-        <div className="sm:col-span-2">
-          <label htmlFor="opponent" className="field-label">
-            Rival <span className="text-rojo">*</span>
-          </label>
-          <input
-            id="opponent"
-            name="opponent"
-            type="text"
-            required
-            defaultValue={match?.opponent ?? ''}
-            placeholder="Nombre del equipo rival"
-            className="field-input"
-          />
-        </div>
+        {isLiga && (
+          <div className="sm:col-span-2">
+            <label htmlFor="opponent" className="field-label">
+              Rival <span className="text-rojo">*</span>
+            </label>
+            <input
+              id="opponent"
+              name="opponent"
+              type="text"
+              required={isLiga}
+              defaultValue={match?.opponent ?? ''}
+              placeholder="Nombre del equipo rival"
+              className="field-input"
+            />
+          </div>
+        )}
 
-        <div className="sm:col-span-2">
+        <div className={isLiga ? 'sm:col-span-2' : ''}>
           <label htmlFor="location" className="field-label">Sede</label>
           <input
             id="location"

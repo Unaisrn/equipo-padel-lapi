@@ -89,7 +89,7 @@ export default async function PartidoPage({ params }: Props) {
         <Link href="/partidos" className="back-link">← Partidos</Link>
         <div className="flex items-center gap-3 mt-2 flex-wrap">
           <h1 className="font-display text-3xl uppercase tracking-widest text-texto font-bold">
-            vs {typedMatch.opponent}
+            {typedMatch.match_type === 'entreno' ? 'Entreno' : `vs ${typedMatch.opponent}`}
           </h1>
           <span className={STATUS_BADGE[typedMatch.status]}>
             {STATUS_LABEL[typedMatch.status]}
@@ -142,6 +142,7 @@ export default async function PartidoPage({ params }: Props) {
           <ResultForm
             key={setsKey}
             matchId={typedMatch.id}
+            matchType={typedMatch.match_type}
             players={playerOptions}
             existingSets={existingSets.map((s) => ({
               pair_number: s.pair_number,
