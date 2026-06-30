@@ -1,8 +1,10 @@
 // Pure calculation functions — receive already-fetched data, make no Supabase calls.
 
+import type { MatchType } from '@/types/database'
+
 export type TransactionRow = { type: 'ingreso' | 'gasto'; amount: number }
-export type SetRow = { player_ids: string[]; won: boolean }
-export type MatchRow = { result_summary: string | null }
+export type SetRow = { player_ids: string[]; won: boolean; match_type?: string }
+export type MatchRow = { result_summary: string | null; match_type?: string }
 
 // ── Caja ─────────────────────────────────────────────────────────────────────
 
@@ -26,13 +28,14 @@ export function calcularSaldoCaja(transactions: TransactionRow[]): number {
 
 // ── Equipo ────────────────────────────────────────────────────────────────────
 
-export function calcularResumenEquipo(matches: MatchRow[]): {
-  victorias: number
-  derrotas: number
-} {
+export function calcularResumenEquipo(
+  matches: MatchRow[],
+  matchType?: MatchType
+): { victorias: number; derrotas: number } {
+  const src = matchType ? matches.filter((m) => m.match_type === matchType) : matches
   let victorias = 0
   let derrotas = 0
-  for (const m of matches) {
+  for (const m of src) {
     if (!m.result_summary) continue
     const [w, l] = m.result_summary.split('-').map(Number)
     if (w > l) victorias++
@@ -51,9 +54,13 @@ export type PlayerAgg = {
   pct: number
 }
 
-/** Stats for a single player. Filters the provided sets by playerId internally. */
-export function calcularStatsJugador(sets: SetRow[], playerId: string): PlayerAgg {
-  const mine = sets.filter((s) => (s.player_ids as string[]).includes(playerId))
+export function calcularStatsJugador(
+  sets: SetRow[],
+  playerId: string,
+  matchType?: MatchType
+): PlayerAgg {
+  const src = matchType ? sets.filter((s) => s.match_type === matchType) : sets
+  const mine = src.filter((s) => (s.player_ids as string[]).includes(playerId))
   const jugados = mine.length
   const ganados = mine.filter((s) => s.won).length
   return {
@@ -65,10 +72,13 @@ export function calcularStatsJugador(sets: SetRow[], playerId: string): PlayerAg
   }
 }
 
-/** Global ranking: one entry per player found in the sets, sorted by % DESC then PJ DESC. */
-export function calcularRankingJugadores(sets: SetRow[]): PlayerAgg[] {
+export function calcularRankingJugadores(
+  sets: SetRow[],
+  matchType?: MatchType
+): PlayerAgg[] {
+  const src = matchType ? sets.filter((s) => s.match_type === matchType) : sets
   const map = new Map<string, { jugados: number; ganados: number }>()
-  for (const set of sets) {
+  for (const set of src) {
     for (const pid of set.player_ids as string[]) {
       if (!map.has(pid)) map.set(pid, { jugados: 0, ganados: 0 })
       const s = map.get(pid)!
@@ -98,15 +108,15 @@ export type PairAgg = {
   pct: number
 }
 
-/**
- * Pair stats, sorted by % DESC then PJ DESC.
- * If playerId is provided, only considers sets where that player appears —
- * useful for the per-player "compañeros habituales" view.
- */
-export function calcularStatsParejas(sets: SetRow[], playerId?: string): PairAgg[] {
+export function calcularStatsParejas(
+  sets: SetRow[],
+  playerId?: string,
+  matchType?: MatchType
+): PairAgg[] {
+  const src = matchType ? sets.filter((s) => s.match_type === matchType) : sets
   const relevant = playerId
-    ? sets.filter((s) => (s.player_ids as string[]).includes(playerId))
-    : sets
+    ? src.filter((s) => (s.player_ids as string[]).includes(playerId))
+    : src
 
   const map = new Map<string, { p1Id: string; p2Id: string; jugados: number; ganadas: number }>()
   for (const set of relevant) {

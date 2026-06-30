@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import {
   calcularResumenEquipo,
@@ -5,11 +6,12 @@ import {
   calcularStatsParejas,
 } from '@/lib/stats'
 import { EmptyState } from '@/components/ui/EmptyState'
+import type { MatchType } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
-type MatchRow = { id: string; result_summary: string | null }
-type SetRow = { player_ids: string[]; won: boolean }
+type MatchData = { id: string; result_summary: string | null }
+type SetData = { player_ids: string[]; won: boolean }
 
 type PlayerStat = {
   id: string
@@ -41,26 +43,39 @@ function PctBar({ pct }: { pct: number }) {
   )
 }
 
-export default async function EstadisticasPage() {
+const TIPO_LABEL: Record<MatchType, string> = { liga: 'liga', entreno: 'entreno' }
+
+interface Props {
+  searchParams: Promise<{ tipo?: string }>
+}
+
+export default async function EstadisticasPage({ searchParams }: Props) {
+  const { tipo } = await searchParams
+  const tipoFiltro: MatchType = tipo === 'entreno' ? 'entreno' : 'liga'
+
   const supabase = await createClient()
 
   const [{ data: matchesData }, { data: playersData }] = await Promise.all([
-    supabase.from('matches').select('id, result_summary').eq('status', 'jugado'),
+    supabase
+      .from('matches')
+      .select('id, result_summary')
+      .eq('status', 'jugado')
+      .eq('match_type', tipoFiltro),
     supabase.from('players').select('id, full_name').order('full_name'),
   ])
 
-  const matches = (matchesData ?? []) as MatchRow[]
+  const matches = (matchesData ?? []) as MatchData[]
   const playerMap = new Map(
     ((playersData ?? []) as { id: string; full_name: string }[]).map((p) => [p.id, p.full_name])
   )
 
-  let sets: SetRow[] = []
+  let sets: SetData[] = []
   if (matches.length > 0) {
     const { data: setsData } = await supabase
       .from('match_sets')
       .select('player_ids, won')
       .in('match_id', matches.map((m) => m.id))
-    sets = (setsData ?? []) as SetRow[]
+    sets = (setsData ?? []) as SetData[]
   }
 
   const { victorias: teamVictorias, derrotas: teamDerrotas } = calcularResumenEquipo(matches)
@@ -84,6 +99,22 @@ export default async function EstadisticasPage() {
         Estadísticas
       </h1>
 
+      {/* Tabs Liga / Entreno */}
+      <div className="pill-tabs mb-6">
+        <Link
+          href="/estadisticas"
+          className={`pill-tab ${tipoFiltro === 'liga' ? 'pill-tab-active' : ''}`}
+        >
+          Liga
+        </Link>
+        <Link
+          href="/estadisticas?tipo=entreno"
+          className={`pill-tab ${tipoFiltro === 'entreno' ? 'pill-tab-active' : ''}`}
+        >
+          Entreno
+        </Link>
+      </div>
+
       {noData ? (
         <EmptyState
           icon={
@@ -93,8 +124,8 @@ export default async function EstadisticasPage() {
               <rect x="11" y="1" width="4" height="14" rx="0.5" />
             </svg>
           }
-          title="Aquí aparecerán los rankings cuando registréis resultados de partidos."
-          action={{ href: '/partidos', label: 'Ver partidos' }}
+          title={`Aquí aparecerán los rankings cuando registréis resultados de partidos de ${TIPO_LABEL[tipoFiltro]}.`}
+          action={{ href: '/partidos/nuevo', label: '+ Programar partido' }}
         />
       ) : (
         <div className="space-y-8">
@@ -104,7 +135,9 @@ export default async function EstadisticasPage() {
             <div className="grid grid-cols-3 gap-3">
               <div className="card p-5 text-center">
                 <div className="text-3xl font-bold text-texto">{matches.length}</div>
-                <div className="text-xs text-apagado mt-1">Partidos jugados</div>
+                <div className="text-xs text-apagado mt-1">
+                  {tipoFiltro === 'entreno' ? 'Sesiones' : 'Partidos jugados'}
+                </div>
               </div>
               <div className="card p-5 text-center">
                 <div className={`text-3xl font-bold ${teamVictorias > 0 ? 'text-verde-bright' : 'text-apagado'}`}>

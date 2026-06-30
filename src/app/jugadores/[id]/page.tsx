@@ -7,6 +7,7 @@ import { updatePlayer } from '@/app/jugadores/actions'
 import type { PlayerFormState } from '@/app/jugadores/actions'
 import type { FeeStatus } from '@/types/database'
 import { calcularStatsJugador, calcularStatsParejas } from '@/lib/stats'
+import type { SetRow } from '@/lib/stats'
 
 type UpdateAction = (prevState: PlayerFormState, formData: FormData) => Promise<PlayerFormState>
 
@@ -15,7 +16,7 @@ type WithdrawalRow = {
   scope: 'equipo' | 'partido'
   reason: string | null
   date: string
-  matches: { date: string; opponent: string } | null
+  matches: { date: string; opponent: string | null } | null
 }
 
 type FeeRow = {
@@ -54,40 +55,54 @@ export default async function JugadorPage({ params }: Props) {
         .select('id, concept, amount, status, paid_at, due_date')
         .eq('player_id', id)
         .order('created_at', { ascending: false }),
-      supabase.from('matches').select('id').eq('status', 'jugado'),
+      supabase.from('matches').select('id, match_type').eq('status', 'jugado'),
     ])
 
   if (error || !player) notFound()
 
   const withdrawals = (withdrawalsData ?? []) as WithdrawalRow[]
   const fees = (feesData ?? []) as FeeRow[]
-  const jugadoMatchIds = (jugadoMatchesData ?? []).map((m) => m.id)
 
-  let allSets: Array<{ player_ids: string[]; won: boolean }> = []
+  const jugadoMatches = (jugadoMatchesData ?? []) as { id: string; match_type: string }[]
+  const jugadoMatchIds = jugadoMatches.map((m) => m.id)
+  const matchTypeMap = new Map(jugadoMatches.map((m) => [m.id, m.match_type]))
+
+  // One set query, annotated with match_type via the map
+  let allSets: SetRow[] = []
   if (jugadoMatchIds.length > 0) {
     const { data: setsData } = await supabase
       .from('match_sets')
-      .select('player_ids, won')
+      .select('match_id, player_ids, won')
       .in('match_id', jugadoMatchIds)
-    allSets = (setsData ?? []) as Array<{ player_ids: string[]; won: boolean }>
+    allSets = ((setsData ?? []) as { match_id: string; player_ids: string[]; won: boolean }[]).map((s) => ({
+      player_ids: s.player_ids,
+      won: s.won,
+      match_type: matchTypeMap.get(s.match_id),
+    }))
   }
 
-  const playerStats = calcularStatsJugador(allSets, id)
-  const pjugados = playerStats.jugados
-  const pganados = playerStats.ganados
-  const ppct = pjugados > 0 ? Math.round(playerStats.pct) : null
+  // Stats per type using the matchType filter param
+  const ligaStats = calcularStatsJugador(allSets, id, 'liga')
+  const entrenoStats = calcularStatsJugador(allSets, id, 'entreno')
+  const ligaPairAggs = calcularStatsParejas(allSets, id, 'liga').sort((a, b) => b.jugados - a.jugados).slice(0, 3)
+  const entrenoPairAggs = calcularStatsParejas(allSets, id, 'entreno').sort((a, b) => b.jugados - a.jugados).slice(0, 3)
 
-  const pairAggs = calcularStatsParejas(allSets, id)
-  const topPairAggs = [...pairAggs].sort((a, b) => b.jugados - a.jugados).slice(0, 3)
-  let topPartners: PartnerStat[] = []
-  if (topPairAggs.length > 0) {
-    const partnerIds = topPairAggs.map((p) => (p.p1Id === id ? p.p2Id : p.p1Id))
+  // Fetch partner names for both types in one query
+  const allPartnerIds = [...new Set([
+    ...ligaPairAggs.map((p) => (p.p1Id === id ? p.p2Id : p.p1Id)),
+    ...entrenoPairAggs.map((p) => (p.p1Id === id ? p.p2Id : p.p1Id)),
+  ])]
+  let partnerMap = new Map<string, string>()
+  if (allPartnerIds.length > 0) {
     const { data: partnerData } = await supabase
       .from('players')
       .select('id, full_name')
-      .in('id', partnerIds)
-    const partnerMap = new Map((partnerData ?? []).map((p) => [p.id, p.full_name]))
-    topPartners = topPairAggs.map((p) => {
+      .in('id', allPartnerIds)
+    partnerMap = new Map((partnerData ?? []).map((p) => [p.id, p.full_name]))
+  }
+
+  function buildPartners(aggs: typeof ligaPairAggs): PartnerStat[] {
+    return aggs.map((p) => {
       const partnerId = p.p1Id === id ? p.p2Id : p.p1Id
       return {
         name: partnerMap.get(partnerId) ?? 'Jugador eliminado',
@@ -96,6 +111,9 @@ export default async function JugadorPage({ params }: Props) {
       }
     })
   }
+
+  const ligaPartners = buildPartners(ligaPairAggs)
+  const entrenoPartners = buildPartners(entrenoPairAggs)
 
   const updateAction = updatePlayer.bind(null, player.id) as UpdateAction
   const teamWithdrawal = withdrawals.find((w) => w.scope === 'equipo')
@@ -203,7 +221,7 @@ export default async function JugadorPage({ params }: Props) {
                   </span>
                   {w.matches && (
                     <span className="ml-2 text-apagado">
-                      vs {w.matches.opponent} (
+                      {w.matches.opponent ? `vs ${w.matches.opponent}` : 'Entreno'} (
                       {new Date(w.matches.date + 'T00:00:00').toLocaleDateString('es-ES')})
                     </span>
                   )}
@@ -215,48 +233,71 @@ export default async function JugadorPage({ params }: Props) {
         )}
       </div>
 
-      {/* Estadísticas individuales */}
+      {/* Estadísticas individuales — Liga y Entreno separadas */}
       <div className="card p-6 mb-5">
-        <h2 className="text-sm font-semibold text-texto mb-3">Estadísticas</h2>
-        {pjugados === 0 ? (
-          <p className="text-sm text-apagado">Sin partidos jugados todavía.</p>
-        ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="text-center">
-                <div className="text-xl font-bold text-texto">{pjugados}</div>
-                <div className="text-xs text-apagado mt-0.5">Jugados</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-verde-bright">{pganados}</div>
-                <div className="text-xs text-apagado mt-0.5">Ganados</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-texto">
-                  {ppct !== null ? `${ppct} %` : '—'}
-                </div>
-                <div className="text-xs text-apagado mt-0.5">% victorias</div>
-              </div>
-            </div>
+        <h2 className="text-sm font-semibold text-texto mb-4">Estadísticas</h2>
+        <div className="space-y-5">
+          {(['liga', 'entreno'] as const).map((tipo) => {
+            const stats = tipo === 'liga' ? ligaStats : entrenoStats
+            const partners = tipo === 'liga' ? ligaPartners : entrenoPartners
+            const pjugados = stats.jugados
+            const pganados = stats.ganados
+            const ppct = pjugados > 0 ? Math.round(stats.pct) : null
 
-            {topPartners.length > 0 && (
-              <div>
-                <div className="text-xs font-medium text-apagado mb-2">Compañeros habituales</div>
-                <div className="space-y-1.5">
-                  {topPartners.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <span className="text-texto">{p.name}</span>
-                      <span className="text-apagado text-xs tabular-nums">
-                        {p.jugados} {p.jugados === 1 ? 'partido' : 'partidos'} juntos
-                        {' · '}{p.ganadas}G / {p.jugados - p.ganadas}P
-                      </span>
-                    </div>
-                  ))}
+            return (
+              <div key={tipo}>
+                <div className={`text-[10px] font-semibold uppercase tracking-widest mb-2 ${
+                  tipo === 'liga' ? 'text-azul' : 'text-purple-400'
+                }`}>
+                  {tipo === 'liga' ? 'Liga' : 'Entreno'}
                 </div>
+                {pjugados === 0 ? (
+                  <p className="text-sm text-apagado">
+                    Sin {tipo === 'liga' ? 'partidos de liga' : 'entrenos'} jugados.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="text-center">
+                        <div className="text-xl font-bold text-texto">{pjugados}</div>
+                        <div className="text-xs text-apagado mt-0.5">Jugados</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xl font-bold text-verde-bright">{pganados}</div>
+                        <div className="text-xs text-apagado mt-0.5">Ganados</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xl font-bold text-texto">
+                          {ppct !== null ? `${ppct} %` : '—'}
+                        </div>
+                        <div className="text-xs text-apagado mt-0.5">% victorias</div>
+                      </div>
+                    </div>
+                    {partners.length > 0 && (
+                      <div>
+                        <div className="text-xs font-medium text-apagado mb-2">Compañeros habituales</div>
+                        <div className="space-y-1.5">
+                          {partners.map((p, i) => (
+                            <div key={i} className="flex items-center justify-between text-sm">
+                              <span className="text-texto">{p.name}</span>
+                              <span className="text-apagado text-xs tabular-nums">
+                                {p.jugados} {p.jugados === 1 ? 'partido' : 'partidos'} juntos
+                                {' · '}{p.ganadas}G / {p.jugados - p.ganadas}P
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {tipo === 'liga' && (
+                  <div className="border-t border-borde mt-4" />
+                )}
               </div>
-            )}
-          </div>
-        )}
+            )
+          })}
+        </div>
       </div>
 
       {/* Acciones */}
