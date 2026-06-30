@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { FeeList } from '@/components/cuotas/FeeList'
+import { ReminderButton } from '@/components/cuotas/ReminderButton'
 import type { FeeWithPlayer } from '@/components/cuotas/MarkPaidModal'
 import type { FeeStatus } from '@/types/database'
 
@@ -22,17 +23,16 @@ export default async function CuotasPage({ searchParams }: Props) {
 
   const supabase = await createClient()
 
-  const query = supabase
+  const { data, error } = await supabase
     .from('player_fees')
     .select('*, players(full_name)')
     .order('created_at', { ascending: false })
 
-  const { data, error } =
-    filtro === 'todas' ? await query : await query.eq('status', filtro)
-
   if (error) throw error
 
-  const fees = (data ?? []) as unknown as FeeWithPlayer[]
+  const allFees = (data ?? []) as unknown as FeeWithPlayer[]
+  const pendingFees = allFees.filter((f) => f.status === 'pendiente')
+  const fees = filtro === 'todas' ? allFees : allFees.filter((f) => f.status === filtro)
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto">
@@ -41,6 +41,7 @@ export default async function CuotasPage({ searchParams }: Props) {
           Cuotas
         </h1>
         <div className="flex gap-2">
+          <ReminderButton pendingFees={pendingFees} />
           <Link
             href="/cuotas/lote"
             className="px-4 py-2.5 text-sm font-medium rounded-lg border border-borde text-apagado
