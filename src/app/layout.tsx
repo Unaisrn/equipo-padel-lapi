@@ -16,7 +16,7 @@ const barlowCondensed = Barlow_Condensed({
 })
 
 export const metadata: Metadata = {
-  title: 'Los Andalucistas',
+  title: 'Andalucistas',
   description: 'Gestión del equipo de pádel LAPI',
   icons: {
     icon: [

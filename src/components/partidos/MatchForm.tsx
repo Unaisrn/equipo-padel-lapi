@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -18,6 +18,17 @@ interface Props {
   cancelHref?: string
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  programado: 'Programado',
+  jugado: 'Jugado',
+  aplazado: 'Aplazado',
+}
+const STATUS_BADGE: Record<string, string> = {
+  programado: 'badge-blue',
+  jugado: 'badge-green',
+  aplazado: 'badge-amber',
+}
+
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
@@ -27,17 +38,73 @@ function SubmitButton() {
   )
 }
 
+function ViewField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <dt className="text-xs text-apagado mb-0.5">{label}</dt>
+      <dd className="text-sm text-texto">{children}</dd>
+    </div>
+  )
+}
+
 export function MatchForm({ action, match, cancelHref }: Props) {
   const router = useRouter()
   const [state, formAction] = useActionState(action, null)
+  const [isEditing, setIsEditing] = useState(!match) // start in edit if creating
 
   useEffect(() => {
     if (state && 'success' in state) {
       toast.success('Partido guardado')
+      if (match) setIsEditing(false)
       router.refresh()
     }
-  }, [state, router])
+  }, [state, match, router])
 
+  // ── Modo vista ────────────────────────────────────────────────────
+  if (!isEditing && match) {
+    const dateFormatted = new Date(match.date + 'T00:00:00').toLocaleDateString('es-ES', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+
+    return (
+      <div>
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+          <div className="sm:col-span-2">
+            <ViewField label="Rival">
+              <span className="font-medium">{match.opponent}</span>
+            </ViewField>
+          </div>
+          <ViewField label="Fecha">
+            <span className="capitalize">{dateFormatted}</span>
+          </ViewField>
+          <ViewField label="Local / Visitante">
+            <span className="capitalize">{match.home_away}</span>
+          </ViewField>
+          <ViewField label="Sede">
+            {match.location ?? '—'}
+          </ViewField>
+          <ViewField label="Estado">
+            <span className={STATUS_BADGE[match.status]}>
+              {STATUS_LABEL[match.status]}
+            </span>
+          </ViewField>
+          {match.notes && (
+            <div className="sm:col-span-2">
+              <ViewField label="Notas">{match.notes}</ViewField>
+            </div>
+          )}
+        </dl>
+        <button onClick={() => setIsEditing(true)} className="btn-primary mt-6">
+          Editar
+        </button>
+      </div>
+    )
+  }
+
+  // ── Modo edición (o formulario de creación) ───────────────────────
   return (
     <form action={formAction} className="space-y-5">
       {state && 'error' in state && (
@@ -133,8 +200,12 @@ export function MatchForm({ action, match, cancelHref }: Props) {
 
       <div className="flex items-center gap-3 pt-1">
         <SubmitButton />
-        {cancelHref && (
-          <Link href={cancelHref} className="btn-secondary">Cancelar</Link>
+        {match ? (
+          <button type="button" onClick={() => setIsEditing(false)} className="btn-secondary">
+            Cancelar
+          </button>
+        ) : (
+          cancelHref && <Link href={cancelHref} className="btn-secondary">Cancelar</Link>
         )}
       </div>
     </form>

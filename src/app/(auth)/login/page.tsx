@@ -37,7 +37,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center mb-8">
           <NazariStar className="w-14 h-14 text-rojo mb-4" />
           <h1 className="font-display text-3xl uppercase tracking-[0.2em] text-texto font-bold text-center">
-            Los Andalucistas
+            Andalucistas
           </h1>
           <p className="text-sm text-apagado mt-1 tracking-widest uppercase text-center">
             Pádel LAPI

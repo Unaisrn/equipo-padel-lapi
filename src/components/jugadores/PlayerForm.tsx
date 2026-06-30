@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -18,6 +18,12 @@ interface Props {
   cancelHref?: string
 }
 
+const POSITION_LABELS: Record<string, string> = {
+  drive: 'Drive',
+  reves: 'Revés',
+  ambos: 'Ambos',
+}
+
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
@@ -27,15 +33,27 @@ function SubmitButton() {
   )
 }
 
+function ViewField({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div>
+      <dt className="text-xs text-apagado mb-0.5">{label}</dt>
+      <dd className="text-sm text-texto">{value || '—'}</dd>
+    </div>
+  )
+}
+
 export function PlayerForm({ action, player, cancelHref = '/jugadores' }: Props) {
   const router = useRouter()
   const [state, formAction] = useActionState(action, null)
+  const [isEditing, setIsEditing] = useState(!player) // start in edit if creating
   const today = new Date().toISOString().split('T')[0]
 
   useEffect(() => {
     if (state && 'success' in state) {
       if (player) {
         toast.success('Jugador actualizado')
+        setIsEditing(false)
+        router.refresh()
       } else {
         toast.success('Jugador añadido')
         router.push('/jugadores')
@@ -43,6 +61,40 @@ export function PlayerForm({ action, player, cancelHref = '/jugadores' }: Props)
     }
   }, [state, player, router])
 
+  // ── Modo vista ────────────────────────────────────────────────────
+  if (!isEditing && player) {
+    const joinedFormatted = player.joined_at
+      ? new Date(player.joined_at + 'T00:00:00').toLocaleDateString('es-ES')
+      : null
+
+    return (
+      <div>
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+          <div className="sm:col-span-2">
+            <ViewField label="Nombre completo" value={player.full_name} />
+          </div>
+          <ViewField label="Teléfono" value={player.phone} />
+          <ViewField label="Email" value={player.email} />
+          <ViewField
+            label="Posición"
+            value={player.position ? POSITION_LABELS[player.position] : null}
+          />
+          <ViewField label="Nivel / Categoría" value={player.level} />
+          <ViewField label="Fecha de alta" value={joinedFormatted} />
+          {player.notes && (
+            <div className="sm:col-span-2">
+              <ViewField label="Notas" value={player.notes} />
+            </div>
+          )}
+        </dl>
+        <button onClick={() => setIsEditing(true)} className="btn-primary mt-6">
+          Editar
+        </button>
+      </div>
+    )
+  }
+
+  // ── Modo edición (o formulario de creación) ───────────────────────
   return (
     <form action={formAction} className="space-y-5">
       {state && 'error' in state && (
@@ -124,7 +176,13 @@ export function PlayerForm({ action, player, cancelHref = '/jugadores' }: Props)
 
       <div className="flex items-center gap-3 pt-2">
         <SubmitButton />
-        <Link href={cancelHref} className="btn-secondary">Cancelar</Link>
+        {player ? (
+          <button type="button" onClick={() => setIsEditing(false)} className="btn-secondary">
+            Cancelar
+          </button>
+        ) : (
+          <Link href={cancelHref} className="btn-secondary">Cancelar</Link>
+        )}
       </div>
     </form>
   )

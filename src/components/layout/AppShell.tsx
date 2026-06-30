@@ -121,7 +121,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <NazariStar className="w-8 h-8 text-rojo shrink-0" />
         <div className="leading-tight min-w-0">
           <p className="font-display text-[15px] uppercase tracking-[0.15em] text-texto font-bold">
-            Los Andalucistas
+            Andalucistas
           </p>
           <p className="text-[10px] text-apagado tracking-widest uppercase">Pádel LAPI</p>
         </div>
@@ -202,7 +202,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
           <NazariStar className="w-5 h-5 text-rojo shrink-0" />
           <span className="font-display text-sm uppercase tracking-widest text-texto font-bold">
-            Los Andalucistas
+            Andalucistas
           </span>
         </header>
 
