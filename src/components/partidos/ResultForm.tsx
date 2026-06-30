@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { saveResult } from '@/app/partidos/actions'
 import type { PairInput, ResultFormState } from '@/app/partidos/actions'
+import { Spinner } from '@/components/ui/Spinner'
 
 type PlayerOption = {
   id: string
@@ -181,7 +182,7 @@ export function ResultForm({ matchId, players, existingSets }: Props) {
         disabled={isPending || hasDuplicates}
         className="btn-primary w-full"
       >
-        {isPending ? 'Guardando...' : 'Guardar resultado'}
+        {isPending ? <span className="inline-flex items-center gap-2"><Spinner className="w-4 h-4" /> Guardando</span> : 'Guardar resultado'}
       </button>
     </form>
   )

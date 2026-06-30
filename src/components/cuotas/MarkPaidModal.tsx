@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { markAsPaid } from '@/app/cuotas/actions'
 import type { FeeFormState } from '@/app/cuotas/actions'
 import type { Database } from '@/types/database'
+import { Spinner } from '@/components/ui/Spinner'
 
 export type FeeWithPlayer = Database['public']['Tables']['player_fees']['Row'] & {
   players: { full_name: string } | null
@@ -15,8 +16,8 @@ export type FeeWithPlayer = Database['public']['Tables']['player_fees']['Row'] &
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" disabled={pending} className="btn-primary">
-      {pending ? 'Guardando...' : 'Confirmar pago'}
+    <button type="submit" disabled={pending} className="btn-primary inline-flex items-center gap-2">
+      {pending ? <><Spinner className="w-4 h-4" /> Guardando</> : 'Confirmar pago'}
     </button>
   )
 }

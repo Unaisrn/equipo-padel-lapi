@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import type { WithdrawalFormState } from '@/app/retiradas/actions'
+import { Spinner } from '@/components/ui/Spinner'
 
 type Player = { id: string; full_name: string }
 type Match = { id: string; date: string; opponent: string }
@@ -22,8 +23,8 @@ interface Props {
 function SubmitButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" disabled={pending || disabled} className="btn-primary">
-      {pending ? 'Guardando...' : 'Registrar retirada'}
+    <button type="submit" disabled={pending || disabled} className="btn-primary inline-flex items-center gap-2">
+      {pending ? <><Spinner className="w-4 h-4" /> Guardando</> : 'Registrar retirada'}
     </button>
   )
 }

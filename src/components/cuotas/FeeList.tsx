@@ -6,6 +6,8 @@ import { toast } from 'sonner'
 import { markAsPending } from '@/app/cuotas/actions'
 import { MarkPaidModal } from './MarkPaidModal'
 import type { FeeWithPlayer } from './MarkPaidModal'
+import { Spinner } from '@/components/ui/Spinner'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 const METHOD_LABEL: Record<string, string> = {
   efectivo:      'Efectivo',
@@ -63,18 +65,23 @@ export function FeeList({ fees }: Props) {
       <button
         onClick={() => handleUndo(fee)}
         disabled={undoingId === fee.id || isPending}
-        className="btn-sm-danger"
+        className="btn-sm-danger inline-flex items-center gap-1.5"
       >
-        {undoingId === fee.id ? 'Anulando...' : 'Anular pago'}
+        {undoingId === fee.id ? <><Spinner className="w-3 h-3" /> Anulando</> : 'Anular pago'}
       </button>
     )
   }
 
   if (fees.length === 0) {
     return (
-      <div className="text-center py-16 text-apagado text-sm">
-        No hay cuotas con el filtro seleccionado.
-      </div>
+      <EmptyState
+        icon={
+          <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+            <path d="M3 1a1 1 0 00-1 1v12l2-1.5 2 1.5 2-1.5 2 1.5 2-1.5 2 1.5V2a1 1 0 00-1-1H3zm1 4h8v1.5H4V5zm0 3h6v1.5H4V8z" />
+          </svg>
+        }
+        title="No hay cuotas con el filtro seleccionado."
+      />
     )
   }
 

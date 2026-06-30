@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import type { MatchFormState } from '@/app/partidos/actions'
 import type { Database } from '@/types/database'
+import { Spinner } from '@/components/ui/Spinner'
 
 type Match = Database['public']['Tables']['matches']['Row']
 type ActionFn = (prevState: MatchFormState, formData: FormData) => Promise<MatchFormState>
@@ -20,8 +21,8 @@ interface Props {
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" disabled={pending} className="btn-primary">
-      {pending ? 'Guardando...' : 'Guardar'}
+    <button type="submit" disabled={pending} className="btn-primary inline-flex items-center gap-2">
+      {pending ? <><Spinner className="w-4 h-4" /> Guardando</> : 'Guardar'}
     </button>
   )
 }

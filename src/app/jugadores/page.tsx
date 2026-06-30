@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { PlayerStatus } from '@/types/database'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 const POSITION_LABELS: Record<string, string> = {
   drive: 'Drive',
@@ -31,6 +32,11 @@ export default async function JugadoresPage({ searchParams }: Props) {
 
   if (error) throw error
 
+  const emptyTitle =
+    filtro === 'todos'  ? 'No hay jugadores todavía. Añade el primero.' :
+    filtro === 'activo' ? 'No hay jugadores activos en el equipo.' :
+                          'No hay jugadores dados de baja.'
+
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -55,11 +61,16 @@ export default async function JugadoresPage({ searchParams }: Props) {
       </div>
 
       {players.length === 0 ? (
-        <div className="text-center py-16 text-apagado text-sm">
-          {filtro === 'todos'
-            ? 'No hay jugadores todavía. Añade el primero.'
-            : `No hay jugadores con estado "${filtro}".`}
-        </div>
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+              <circle cx="8" cy="5" r="3" />
+              <path d="M1.5 15a6.5 6.5 0 0113 0H1.5z" />
+            </svg>
+          }
+          title={emptyTitle}
+          action={filtro !== 'baja' ? { href: '/jugadores/nuevo', label: '+ Añadir jugador' } : undefined}
+        />
       ) : (
         <div className="table-wrap">
           <table className="w-full text-sm">
@@ -74,7 +85,7 @@ export default async function JugadoresPage({ searchParams }: Props) {
             </thead>
             <tbody className="table-divider">
               {players.map((player) => (
-                <tr key={player.id} className="table-row">
+                <tr key={player.id} className="table-row cursor-pointer">
                   <td className="px-4 py-3">
                     <Link
                       href={`/jugadores/${player.id}`}

@@ -6,6 +6,8 @@ import { toast } from 'sonner'
 import { deleteTransaction } from '@/app/caja/actions'
 import { TransactionModal } from './TransactionModal'
 import type { Database } from '@/types/database'
+import { Spinner } from '@/components/ui/Spinner'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export type TransactionWithPlayer = Database['public']['Tables']['team_transactions']['Row'] & {
   players: { full_name: string } | null
@@ -79,9 +81,9 @@ export function TransactionList({ transactions }: Props) {
         <button
           onClick={() => handleDelete(tx)}
           disabled={deletingId === tx.id || isPending}
-          className="btn-sm-danger"
+          className="btn-sm-danger inline-flex items-center gap-1.5"
         >
-          {deletingId === tx.id ? '...' : 'Eliminar'}
+          {deletingId === tx.id ? <Spinner className="w-3 h-3" /> : 'Eliminar'}
         </button>
       </div>
     )
@@ -106,9 +108,15 @@ export function TransactionList({ transactions }: Props) {
       </div>
 
       {transactions.length === 0 ? (
-        <div className="text-center py-16 text-apagado text-sm">
-          No hay movimientos con el filtro seleccionado.
-        </div>
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+              <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v1H2V3z" />
+              <path d="M1 6a1 1 0 011-1h12a1 1 0 011 1v7a1 1 0 01-1 1H2a1 1 0 01-1-1V6zm9 2a1 1 0 000 2h2a1 1 0 000-2h-2z" />
+            </svg>
+          }
+          title="No hay movimientos con el filtro seleccionado."
+        />
       ) : (
         <>
           {/* ── Desktop: tabla ─────────────────────────────────────── */}

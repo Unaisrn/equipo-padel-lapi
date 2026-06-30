@@ -1,10 +1,10 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import {
   calcularResumenEquipo,
   calcularRankingJugadores,
   calcularStatsParejas,
 } from '@/lib/stats'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 type MatchRow = { id: string; result_summary: string | null }
 type SetRow = { player_ids: string[]; won: boolean }
@@ -83,13 +83,17 @@ export default async function EstadisticasPage() {
       </h1>
 
       {noData ? (
-        <div className="text-center py-20 text-apagado text-sm">
-          No hay partidos jugados todavía.{' '}
-          <Link href="/partidos" className="text-verde-bright hover:underline">
-            Registra un resultado
-          </Link>{' '}
-          para ver las estadísticas.
-        </div>
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+              <rect x="1" y="9" width="4" height="6" rx="0.5" />
+              <rect x="6" y="5" width="4" height="10" rx="0.5" />
+              <rect x="11" y="1" width="4" height="14" rx="0.5" />
+            </svg>
+          }
+          title="Aquí aparecerán los rankings cuando registréis resultados de partidos."
+          action={{ href: '/partidos', label: 'Ver partidos' }}
+        />
       ) : (
         <div className="space-y-8">
           {/* Resumen del equipo */}
@@ -101,11 +105,15 @@ export default async function EstadisticasPage() {
                 <div className="text-xs text-apagado mt-1">Partidos jugados</div>
               </div>
               <div className="card p-5 text-center">
-                <div className="text-3xl font-bold text-verde-bright">{teamVictorias}</div>
+                <div className={`text-3xl font-bold ${teamVictorias > 0 ? 'text-verde-bright' : 'text-apagado'}`}>
+                  {teamVictorias}
+                </div>
                 <div className="text-xs text-apagado mt-1">Victorias</div>
               </div>
               <div className="card p-5 text-center">
-                <div className="text-3xl font-bold text-rojo">{teamDerrotas}</div>
+                <div className={`text-3xl font-bold ${teamDerrotas > 0 ? 'text-rojo' : 'text-apagado'}`}>
+                  {teamDerrotas}
+                </div>
                 <div className="text-xs text-apagado mt-1">Derrotas</div>
               </div>
             </div>
@@ -131,7 +139,7 @@ export default async function EstadisticasPage() {
                   </thead>
                   <tbody className="table-divider">
                     {playerRanking.map((p, i) => (
-                      <tr key={p.id} className="table-row">
+                      <tr key={p.id} className="table-row-static">
                         <td className="px-4 py-3 text-tenue text-xs">{i + 1}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
@@ -142,8 +150,12 @@ export default async function EstadisticasPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-center text-apagado tabular-nums">{p.jugados}</td>
-                        <td className="px-4 py-3 text-center text-verde-bright font-medium tabular-nums">{p.ganados}</td>
-                        <td className="px-4 py-3 text-center text-rojo tabular-nums">{p.perdidos}</td>
+                        <td className={`px-4 py-3 text-center font-medium tabular-nums ${p.ganados > 0 ? 'text-verde-bright' : 'text-apagado'}`}>
+                          {p.ganados}
+                        </td>
+                        <td className={`px-4 py-3 text-center tabular-nums ${p.perdidos > 0 ? 'text-rojo' : 'text-apagado'}`}>
+                          {p.perdidos}
+                        </td>
                         <td className="px-4 py-3"><PctBar pct={p.pct} /></td>
                       </tr>
                     ))}
@@ -173,7 +185,7 @@ export default async function EstadisticasPage() {
                   </thead>
                   <tbody className="table-divider">
                     {pairRanking.map((pair, i) => (
-                      <tr key={i} className="table-row">
+                      <tr key={i} className="table-row-static">
                         <td className="px-4 py-3 text-tenue text-xs">{i + 1}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -186,8 +198,12 @@ export default async function EstadisticasPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-center text-apagado tabular-nums">{pair.jugados}</td>
-                        <td className="px-4 py-3 text-center text-verde-bright font-medium tabular-nums">{pair.ganadas}</td>
-                        <td className="px-4 py-3 text-center text-rojo tabular-nums">{pair.perdidas}</td>
+                        <td className={`px-4 py-3 text-center font-medium tabular-nums ${pair.ganadas > 0 ? 'text-verde-bright' : 'text-apagado'}`}>
+                          {pair.ganadas}
+                        </td>
+                        <td className={`px-4 py-3 text-center tabular-nums ${pair.perdidas > 0 ? 'text-rojo' : 'text-apagado'}`}>
+                          {pair.perdidas}
+                        </td>
                         <td className="px-4 py-3"><PctBar pct={pair.pct} /></td>
                       </tr>
                     ))}

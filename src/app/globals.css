@@ -193,6 +193,10 @@ body {
   @apply hover:bg-tarjeta-hover transition-colors;
 }
 
+.table-row-static {
+  @apply transition-colors;
+}
+
 .table-divider {
   @apply divide-y divide-borde;
 }

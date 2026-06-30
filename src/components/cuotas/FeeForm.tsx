@@ -5,6 +5,7 @@ import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import type { Database } from '@/types/database'
 import type { FeeFormState } from '@/app/cuotas/actions'
+import { Spinner } from '@/components/ui/Spinner'
 
 type Player = Pick<Database['public']['Tables']['players']['Row'], 'id' | 'full_name'>
 type ActionFn = (prevState: FeeFormState, formData: FormData) => Promise<FeeFormState>
@@ -17,8 +18,8 @@ interface Props {
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" disabled={pending} className="btn-primary">
-      {pending ? 'Guardando...' : 'Crear cuota'}
+    <button type="submit" disabled={pending} className="btn-primary inline-flex items-center gap-2">
+      {pending ? <><Spinner className="w-4 h-4" /> Guardando</> : 'Crear cuota'}
     </button>
   )
 }

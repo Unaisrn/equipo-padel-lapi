@@ -7,12 +7,13 @@ import { toast } from 'sonner'
 import { createTransaction, updateTransaction } from '@/app/caja/actions'
 import type { TransactionFormState } from '@/app/caja/actions'
 import type { TransactionWithPlayer } from './TransactionList'
+import { Spinner } from '@/components/ui/Spinner'
 
 function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" disabled={pending} className="btn-primary">
-      {pending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Añadir movimiento'}
+    <button type="submit" disabled={pending} className="btn-primary inline-flex items-center gap-2">
+      {pending ? <><Spinner className="w-4 h-4" /> Guardando</> : isEdit ? 'Guardar cambios' : 'Añadir movimiento'}
     </button>
   )
 }

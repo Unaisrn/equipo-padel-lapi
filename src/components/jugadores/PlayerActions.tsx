@@ -4,6 +4,7 @@ import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { darDeBaja, deletePlayer } from '@/app/jugadores/actions'
+import { Spinner } from '@/components/ui/Spinner'
 
 export function BajaButton({ playerId }: { playerId: string }) {
   const [isPending, startTransition] = useTransition()
@@ -26,7 +27,7 @@ export function BajaButton({ playerId }: { playerId: string }) {
                  text-amber-300 bg-amber-950/40 border-amber-700/30
                  hover:bg-amber-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {isPending ? 'Procesando...' : 'Dar de baja'}
+      {isPending ? <span className="inline-flex items-center gap-1.5"><Spinner className="w-3.5 h-3.5" /> Procesando</span> : 'Dar de baja'}
     </button>
   )
 }
@@ -52,7 +53,7 @@ export function DeletePlayerButton({ playerId }: { playerId: string }) {
                  text-red-300 bg-rojo/10 border-rojo/20
                  hover:bg-rojo/20 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {isPending ? 'Eliminando...' : 'Eliminar jugador'}
+      {isPending ? <span className="inline-flex items-center gap-1.5"><Spinner className="w-3.5 h-3.5" /> Eliminando</span> : 'Eliminar jugador'}
     </button>
   )
 }

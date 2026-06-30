@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import type { Database } from '@/types/database'
 import type { PlayerFormState } from '@/app/jugadores/actions'
+import { Spinner } from '@/components/ui/Spinner'
 
 type Player = Database['public']['Tables']['players']['Row']
 type ActionFn = (prevState: PlayerFormState, formData: FormData) => Promise<PlayerFormState>
@@ -20,8 +21,8 @@ interface Props {
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
-    <button type="submit" disabled={pending} className="btn-primary">
-      {pending ? 'Guardando...' : 'Guardar'}
+    <button type="submit" disabled={pending} className="btn-primary inline-flex items-center gap-2">
+      {pending ? <><Spinner className="w-4 h-4" /> Guardando</> : 'Guardar'}
     </button>
   )
 }

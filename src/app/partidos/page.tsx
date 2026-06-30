@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/database'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 type Match = Database['public']['Tables']['matches']['Row']
 
@@ -22,7 +23,7 @@ function MatchRow({ match }: { match: Match }) {
     year: 'numeric',
   })
   return (
-    <tr className="table-row">
+    <tr className="table-row cursor-pointer">
       <td className="px-4 py-3 text-apagado whitespace-nowrap">{date}</td>
       <td className="px-4 py-3">
         <Link
@@ -138,9 +139,15 @@ export default async function PartidosPage() {
       </div>
 
       {matches.length === 0 ? (
-        <div className="text-center py-16 text-apagado text-sm">
-          No hay partidos registrados todavía.
-        </div>
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+              <path d="M5 1v2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V4a1 1 0 00-1-1h-2V1h-1.5v2h-3V1H5zm-2 5h10v7H3V6z" />
+            </svg>
+          }
+          title="No hay partidos registrados todavía."
+          action={{ href: '/partidos/nuevo', label: '+ Programar partido' }}
+        />
       ) : (
         <div className="space-y-8">
           <section>

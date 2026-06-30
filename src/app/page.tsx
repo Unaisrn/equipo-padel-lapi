@@ -5,13 +5,61 @@ import type { TransactionRow } from '@/lib/stats'
 
 type MatchRow = { date: string; opponent: string; location: string | null; home_away: string }
 
+function IconUser() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+      <circle cx="8" cy="5" r="3" />
+      <path d="M1.5 15a6.5 6.5 0 0113 0H1.5z" />
+    </svg>
+  )
+}
+function IconReceipt() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+      <path d="M3 1a1 1 0 00-1 1v12l2-1.5 2 1.5 2-1.5 2 1.5 2-1.5 2 1.5V2a1 1 0 00-1-1H3zm1 4h8v1.5H4V5zm0 3h6v1.5H4V8z" />
+    </svg>
+  )
+}
+function IconWallet() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+      <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v1H2V3z" />
+      <path d="M1 6a1 1 0 011-1h12a1 1 0 011 1v7a1 1 0 01-1 1H2a1 1 0 01-1-1V6zm9 2a1 1 0 000 2h2a1 1 0 000-2h-2z" />
+    </svg>
+  )
+}
+function IconArrowLeft() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+      <circle cx="6.5" cy="5" r="2.5" />
+      <path d="M1 14a5.5 5.5 0 019.17-4.1M13 7h-3m3 0l-2-2m2 2l-2 2" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function IconCalendar() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+      <path d="M5 1v2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V4a1 1 0 00-1-1h-2V1h-1.5v2h-3V1H5zm-2 5h10v7H3V6z" />
+    </svg>
+  )
+}
+function IconChart() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+      <rect x="1" y="9" width="4" height="6" rx="0.5" />
+      <rect x="6" y="5" width="4" height="10" rx="0.5" />
+      <rect x="11" y="1" width="4" height="14" rx="0.5" />
+    </svg>
+  )
+}
+
 const NAV_LINKS = [
-  { href: '/jugadores',    label: 'Jugadores',    desc: 'Gestión del equipo' },
-  { href: '/cuotas',       label: 'Cuotas',       desc: 'Pagos de jugadores' },
-  { href: '/caja',         label: 'Caja',         desc: 'Movimientos del equipo' },
-  { href: '/retiradas',    label: 'Retiradas',    desc: 'Bajas de partido / equipo' },
-  { href: '/partidos',     label: 'Partidos',     desc: 'Calendario y resultados' },
-  { href: '/estadisticas', label: 'Estadísticas', desc: 'Rankings y rendimiento' },
+  { href: '/jugadores',    label: 'Jugadores',    desc: 'Gestión del equipo',        icon: <IconUser /> },
+  { href: '/cuotas',       label: 'Cuotas',       desc: 'Pagos de jugadores',        icon: <IconReceipt /> },
+  { href: '/caja',         label: 'Caja',         desc: 'Movimientos del equipo',    icon: <IconWallet /> },
+  { href: '/retiradas',    label: 'Retiradas',    desc: 'Bajas de partido / equipo', icon: <IconArrowLeft /> },
+  { href: '/partidos',     label: 'Partidos',     desc: 'Calendario y resultados',   icon: <IconCalendar /> },
+  { href: '/estadisticas', label: 'Estadísticas', desc: 'Rankings y rendimiento',    icon: <IconChart /> },
 ]
 
 export default async function DashboardPage() {
@@ -47,10 +95,11 @@ export default async function DashboardPage() {
         Resumen
       </h1>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
-        <div className="card p-5">
-          <div className={`text-2xl font-bold font-mono ${balance >= 0 ? 'text-verde-bright' : 'text-rojo'}`}>
+      {/* Stat cards — 1 col mobile, 3 cols desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+        {/* Saldo — tarjeta prominente */}
+        <div className="card p-5 border-verde/40">
+          <div className={`text-3xl font-bold font-mono tabular-nums ${balance >= 0 ? 'text-verde-bright' : 'text-rojo'}`}>
             {balance < 0 ? '−' : ''}{Math.abs(balance).toFixed(2)} €
           </div>
           <div className="text-xs text-apagado mt-1">Saldo caja</div>
@@ -63,7 +112,7 @@ export default async function DashboardPage() {
           <div className="text-xs text-apagado mt-1">Jugadores activos</div>
         </div>
 
-        <div className="card p-5 col-span-2 sm:col-span-1">
+        <div className="card p-5">
           <div className={`text-2xl font-bold ${pendingCount > 0 ? 'text-amber-400' : 'text-texto'}`}>
             {pendingCount}
           </div>
@@ -120,6 +169,9 @@ export default async function DashboardPage() {
               href={link.href}
               className="card p-4 hover:border-verde/50 hover:bg-tarjeta-hover transition-all group"
             >
+              <div className="w-5 h-5 mb-2.5 text-apagado group-hover:text-verde-bright transition-colors">
+                {link.icon}
+              </div>
               <div className="text-sm font-semibold text-texto group-hover:text-verde-bright transition-colors">
                 {link.label}
               </div>

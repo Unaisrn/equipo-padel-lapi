@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 type WithdrawalRow = {
   id: string
@@ -34,9 +35,16 @@ export default async function RetiradasPage() {
       </div>
 
       {withdrawals.length === 0 ? (
-        <div className="text-center py-16 text-apagado text-sm">
-          No hay retiradas registradas todavía.
-        </div>
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 16 16" fill="currentColor" className="w-full h-full" aria-hidden>
+              <circle cx="6.5" cy="5" r="2.5" />
+              <path d="M1 14a5.5 5.5 0 019.17-4.1M13 7h-3m3 0l-2-2m2 2l-2 2" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          }
+          title="No hay retiradas registradas todavía."
+          action={{ href: '/retiradas/nueva', label: '+ Nueva retirada' }}
+        />
       ) : (
         <div className="table-wrap">
           <table className="w-full text-sm">
@@ -51,7 +59,7 @@ export default async function RetiradasPage() {
             </thead>
             <tbody className="table-divider">
               {withdrawals.map((w) => (
-                <tr key={w.id} className="table-row">
+                <tr key={w.id} className="table-row-static">
                   <td className="px-4 py-3 font-medium text-texto">
                     {w.players?.full_name ?? '—'}
                   </td>
