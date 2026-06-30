@@ -5,7 +5,7 @@ import { PlayerForm } from '@/components/jugadores/PlayerForm'
 import { BajaButton, DeletePlayerButton } from '@/components/jugadores/PlayerActions'
 import { updatePlayer } from '@/app/jugadores/actions'
 import type { PlayerFormState } from '@/app/jugadores/actions'
-import type { FeeStatus } from '@/types/database'
+import type { FeeStatus, FeeHistoryAction } from '@/types/database'
 import { calcularStatsJugador, calcularStatsParejas } from '@/lib/stats'
 import type { SetRow } from '@/lib/stats'
 
@@ -28,6 +28,21 @@ type FeeRow = {
   status: FeeStatus
   paid_at: string | null
   due_date: string | null
+}
+
+type FeeHistoryEntry = {
+  id: string
+  fee_id: string
+  action: FeeHistoryAction
+  changed_at: string
+}
+
+const ACTION_LABEL: Record<FeeHistoryAction, string> = {
+  creada:         'Cuota creada',
+  marcada_pagada: 'Marcada como pagada',
+  pago_anulado:   'Pago anulado',
+  editada:        'Datos editados',
+  eliminada:      'Eliminada',
 }
 
 type PartnerStat = {
@@ -64,6 +79,22 @@ export default async function JugadorPage({ params }: Props) {
 
   const withdrawals = (withdrawalsData ?? []) as WithdrawalRow[]
   const fees = (feesData ?? []) as FeeRow[]
+
+  // Fetch fee history for all fees of this player
+  const historyMap = new Map<string, FeeHistoryEntry[]>()
+  const feeIds = fees.map((f) => f.id)
+  if (feeIds.length > 0) {
+    const { data: historyData } = await supabase
+      .from('fee_history')
+      .select('id, fee_id, action, changed_at')
+      .in('fee_id', feeIds)
+      .order('changed_at', { ascending: true })
+    for (const h of (historyData ?? []) as FeeHistoryEntry[]) {
+      const arr = historyMap.get(h.fee_id) ?? []
+      arr.push(h)
+      historyMap.set(h.fee_id, arr)
+    }
+  }
 
   const jugadoMatches = (jugadoMatchesData ?? []) as { id: string; match_type: string }[]
   const jugadoMatchIds = jugadoMatches.map((m) => m.id)
@@ -157,31 +188,51 @@ export default async function JugadorPage({ params }: Props) {
           <p className="text-sm text-apagado">Sin cuotas registradas.</p>
         ) : (
           <div className="divide-y divide-borde">
-            {fees.map((fee) => (
-              <div key={fee.id} className="flex items-center justify-between py-2.5">
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm text-texto truncate">{fee.concept}</span>
-                  {fee.paid_at && (
-                    <span className="ml-2 text-xs text-apagado">
-                      {new Date(fee.paid_at + 'T00:00:00').toLocaleDateString('es-ES')}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 ml-3 shrink-0">
-                  <span className="text-sm font-medium text-texto tabular-nums font-mono">
-                    {Number(fee.amount).toFixed(2)} €
-                  </span>
-                  {(() => {
-                    const vencida = fee.status === 'pendiente' && !!fee.due_date && fee.due_date < today
-                    return (
+            {fees.map((fee) => {
+              const history = historyMap.get(fee.id) ?? []
+              const vencida = fee.status === 'pendiente' && !!fee.due_date && fee.due_date < today
+              return (
+                <div key={fee.id} className="py-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm text-texto truncate">{fee.concept}</span>
+                      {fee.paid_at && (
+                        <span className="ml-2 text-xs text-apagado">
+                          {new Date(fee.paid_at + 'T00:00:00').toLocaleDateString('es-ES')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 ml-3 shrink-0">
+                      <span className="text-sm font-medium text-texto tabular-nums font-mono">
+                        {Number(fee.amount).toFixed(2)} €
+                      </span>
                       <span className={fee.status === 'pagado' ? 'badge-green' : vencida ? 'badge-red' : 'badge-amber'}>
                         {fee.status === 'pagado' ? 'Pagado' : vencida ? 'Vencida' : 'Pendiente'}
                       </span>
-                    )
-                  })()}
+                    </div>
+                  </div>
+                  {history.length > 0 && (
+                    <details className="mt-1.5">
+                      <summary className="cursor-pointer text-xs text-tenue hover:text-apagado select-none marker:text-tenue">
+                        Ver historial ({history.length})
+                      </summary>
+                      <div className="mt-2 ml-1 border-l border-borde pl-3 space-y-1.5 py-0.5">
+                        {history.map((h) => (
+                          <div key={h.id} className="flex items-baseline gap-2">
+                            <span className="text-[10px] text-tenue tabular-nums shrink-0">
+                              {new Date(h.changed_at).toLocaleDateString('es-ES')}
+                            </span>
+                            <span className="text-xs text-apagado">
+                              {ACTION_LABEL[h.action]}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

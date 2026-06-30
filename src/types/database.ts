@@ -1,6 +1,7 @@
 export type PlayerPosition = 'drive' | 'reves' | 'ambos'
 export type PlayerStatus = 'activo' | 'baja'
 export type FeeStatus = 'pendiente' | 'pagado'
+export type FeeHistoryAction = 'creada' | 'marcada_pagada' | 'pago_anulado' | 'editada' | 'eliminada'
 export type PaymentMethod = 'efectivo' | 'bizum' | 'transferencia' | 'otro'
 export type TransactionType = 'ingreso' | 'gasto'
 export type WithdrawalScope = 'equipo' | 'partido'
@@ -226,6 +227,36 @@ export type Database = {
         }
         Relationships: []
       }
+      fee_history: {
+        Row: {
+          id: string
+          fee_id: string
+          action: FeeHistoryAction
+          previous_status: string | null
+          new_status: string | null
+          notes: string | null
+          changed_at: string
+        }
+        Insert: {
+          id?: string
+          fee_id: string
+          action: FeeHistoryAction
+          previous_status?: string | null
+          new_status?: string | null
+          notes?: string | null
+          changed_at?: string
+        }
+        Update: {
+          id?: string
+          fee_id?: string
+          action?: FeeHistoryAction
+          previous_status?: string | null
+          new_status?: string | null
+          notes?: string | null
+          changed_at?: string
+        }
+        Relationships: []
+      }
       match_sets: {
         Row: {
           id: string
@@ -277,6 +308,7 @@ export type Database = {
       home_away: HomeAway
       match_status: MatchStatus
       match_type: MatchType
+      fee_history_action: FeeHistoryAction
     }
     CompositeTypes: { [_ in never]: never }
   }
