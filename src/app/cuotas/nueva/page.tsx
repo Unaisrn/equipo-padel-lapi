@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { FeeForm } from '@/components/cuotas/FeeForm'
 import { createFee } from '@/app/cuotas/actions'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NuevaCuotaPage() {
   const supabase = await createClient()
   const { data: players, error } = await supabase

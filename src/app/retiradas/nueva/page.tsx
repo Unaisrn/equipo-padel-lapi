@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { WithdrawalForm } from '@/components/retiradas/WithdrawalForm'
 import { createWithdrawal } from '@/app/retiradas/actions'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NuevaRetiradaPage() {
   const supabase = await createClient()
 

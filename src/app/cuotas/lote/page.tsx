@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { BatchFeeForm } from '@/components/cuotas/BatchFeeForm'
 import { createBatchFees } from '@/app/cuotas/actions'
 
+export const dynamic = 'force-dynamic'
+
 export default async function LoteCuotaPage() {
   const supabase = await createClient()
   const { data: players, error } = await supabase
