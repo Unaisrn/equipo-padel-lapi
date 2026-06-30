@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/EmptyState'
 
+export const dynamic = 'force-dynamic'
+
 type WithdrawalRow = {
   id: string
   scope: 'equipo' | 'partido'

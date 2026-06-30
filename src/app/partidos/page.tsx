@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/database'
 import { EmptyState } from '@/components/ui/EmptyState'
 
+export const dynamic = 'force-dynamic'
+
 type Match = Database['public']['Tables']['matches']['Row']
 
 const STATUS_BADGE: Record<string, string> = {

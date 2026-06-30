@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { calcularSaldoCaja } from '@/lib/stats'
 import type { TransactionRow } from '@/lib/stats'
 
+export const dynamic = 'force-dynamic'
+
 type MatchRow = { date: string; opponent: string; location: string | null; home_away: string }
 
 function IconUser() {

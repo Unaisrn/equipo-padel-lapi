@@ -6,6 +6,8 @@ import {
 } from '@/lib/stats'
 import { EmptyState } from '@/components/ui/EmptyState'
 
+export const dynamic = 'force-dynamic'
+
 type MatchRow = { id: string; result_summary: string | null }
 type SetRow = { player_ids: string[]; won: boolean }
 
