@@ -108,7 +108,7 @@ export async function saveResult(
   if (insertError) return { error: insertError.message }
 
   const wons = sets.filter((s) => s.won).length
-  const result_summary = `${wons}-${3 - wons}`
+  const result_summary = `${wons}-${sets.length - wons}`
 
   const { error: updateError } = await supabase
     .from('matches')

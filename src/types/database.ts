@@ -6,6 +6,7 @@ export type TransactionType = 'ingreso' | 'gasto'
 export type WithdrawalScope = 'equipo' | 'partido'
 export type HomeAway = 'local' | 'visitante'
 export type MatchStatus = 'programado' | 'jugado' | 'aplazado'
+export type MatchType = 'liga' | 'entreno'
 
 export type Database = {
   public: {
@@ -190,9 +191,10 @@ export type Database = {
         Row: {
           id: string
           date: string
-          opponent: string
+          match_type: MatchType
+          opponent: string | null
           location: string | null
-          home_away: HomeAway
+          home_away: HomeAway | null
           result_summary: string | null
           status: MatchStatus
           notes: string | null
@@ -201,9 +203,10 @@ export type Database = {
         Insert: {
           id?: string
           date: string
-          opponent: string
+          match_type?: MatchType
+          opponent?: string | null
           location?: string | null
-          home_away: HomeAway
+          home_away?: HomeAway | null
           result_summary?: string | null
           status?: MatchStatus
           notes?: string | null
@@ -212,9 +215,10 @@ export type Database = {
         Update: {
           id?: string
           date?: string
-          opponent?: string
+          match_type?: MatchType
+          opponent?: string | null
           location?: string | null
-          home_away?: HomeAway
+          home_away?: HomeAway | null
           result_summary?: string | null
           status?: MatchStatus
           notes?: string | null
@@ -272,6 +276,7 @@ export type Database = {
       withdrawal_scope: WithdrawalScope
       home_away: HomeAway
       match_status: MatchStatus
+      match_type: MatchType
     }
     CompositeTypes: { [_ in never]: never }
   }

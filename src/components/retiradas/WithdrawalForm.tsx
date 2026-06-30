@@ -10,7 +10,7 @@ import type { WithdrawalFormState } from '@/app/retiradas/actions'
 import { Spinner } from '@/components/ui/Spinner'
 
 type Player = { id: string; full_name: string }
-type Match = { id: string; date: string; opponent: string }
+type Match = { id: string; date: string; opponent: string | null }
 type Scope = 'equipo' | 'partido'
 type ActionFn = (prevState: WithdrawalFormState, formData: FormData) => Promise<WithdrawalFormState>
 
@@ -115,7 +115,7 @@ export function WithdrawalForm({ players, matches, action }: Props) {
               <option value="" disabled>Seleccionar partido...</option>
               {matches.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.opponent} –{' '}
+                  {m.opponent ?? 'Entreno'} –{' '}
                   {new Date(m.date + 'T00:00:00').toLocaleDateString('es-ES')}
                 </option>
               ))}
